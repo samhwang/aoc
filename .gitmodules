@@ -1,0 +1,3 @@
+[submodule "get-aoc-input"]
+	path = get-aoc-input
+	url = git@github.com:samhwang/get-aoc-input.git

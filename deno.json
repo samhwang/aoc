@@ -15,5 +15,8 @@
       "indentWidth": 2,
       "singleQuote": true
     }
+  },
+  "tasks": {
+    "fetch": "deno run --allow-read --allow-write --allow-net get-aoc-input/index.ts fetch"
   }
 }
