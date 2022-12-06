@@ -1,25 +1,26 @@
-const elves = Deno.readTextFileSync('./input.txt')
-  .split('\n')
-  .reduce<number[]>((accumulator, line) => {
-    const currentElfLoad = accumulator[accumulator.length - 1];
+const lines = Deno.readTextFileSync('./input.txt')
+  .split('\n');
 
-    if (line.length === 0) {
-      accumulator.push(0);
-      return accumulator;
-    }
-
-    const lineAsNum = Number.parseInt(line);
-    accumulator[accumulator.length - 1] = currentElfLoad + lineAsNum;
+const elves = lines.reduce<number[]>((accumulator, line) => {
+  if (line.length === 0) {
+    accumulator.push(0);
     return accumulator;
-  }, [])
+  }
+
+  const last = accumulator.length - 1;
+  const currentElfLoad = accumulator[last];
+  const lineAsNum = Number.parseInt(line);
+  accumulator[last] = currentElfLoad + lineAsNum;
+  return accumulator;
+}, [])
   .sort((a, b) => a - b);
 
-const lastElf = elves.length - 1;
-
 // Find the most calorie elf
-const largest = elves[lastElf];
+console.log('TASK 1');
+const largest = elves[elves.length - 1];
 console.log({ largest });
 
 // The largest 3 Sum
-const top3 = elves[lastElf] + elves[lastElf - 1] + elves[lastElf - 2];
+console.log('TASK 2');
+const top3 = elves.slice(-3).reduce((total, num) => total + num, 0);
 console.log({ top3 });
