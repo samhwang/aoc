@@ -79,7 +79,7 @@ console.log({ priorityPoints });
 
 // Task 2: Split into group of 3. Calculate points.
 console.log('TASK 2');
-const groups = rucksacks.reduce<[Set<string>, Set<string>, Set<string>][]>((accumulator, rs, currentIndex) => {
+const groups = rucksacks.reduce<Set<string>[][]>((accumulator, rs, currentIndex) => {
   if (currentIndex % 3 === 0) {
     accumulator.push([new Set(rs)]);
     return accumulator;
