@@ -2,10 +2,12 @@ const [graph, instruction] = Deno.readTextFileSync('./input.txt').split('\n\n');
 
 // Parse the graph into arrays holding the crates
 // Find the title index, and find matching index in each line, because crates and title will line up in a column
+type Crate = string;
+type Stack = Map<string, Crate[]>;
 const graphLines = graph.split('\n');
-const titles = graphLines[graphLines.length - 1].split('').filter((char) => char !== ' ');
-const stacks = titles.reduce<Map<string, string[]>>((stackMap, title) => {
-  const indexOf = graphLines[graphLines.length - 1].indexOf(title);
+const stackIds = graphLines[graphLines.length - 1].split('').filter((char) => char !== ' ');
+const stacks = stackIds.reduce<Stack>((stackMap, id) => {
+  const indexOf = graphLines[graphLines.length - 1].indexOf(id);
   const crates = graphLines.reduce<string[]>((accum, line, currentIndex) => {
     if (currentIndex === graphLines.length - 1) {
       return accum;
@@ -18,10 +20,11 @@ const stacks = titles.reduce<Map<string, string[]>>((stackMap, title) => {
     accum.unshift(char);
     return accum;
   }, []);
-  stackMap.set(title, crates);
+  stackMap.set(id, crates);
   return stackMap;
 }, new Map());
 
+// Parse the steps from the instruction
 interface Step {
   move: number;
   from: string;
@@ -40,6 +43,7 @@ const steps = instruction.split('\n').map<Step>((line) => {
   };
 });
 
+// Task 1: Move the crates 1 by 1
 console.log('TASK 1');
 const task1Stack = new Map(stacks);
 steps.forEach((step) => {
@@ -57,6 +61,7 @@ task1Stack.forEach((stack) => {
 });
 console.log({ endString });
 
+// Task 2: Move all the crates at once
 console.log('TASK 2');
 const task2Stack = new Map(stacks);
 steps.forEach((step) => {
