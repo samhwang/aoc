@@ -58,23 +58,6 @@ function rollup(values: number[]) {
 
 function calculateTreeSize(tree: DirTree) {
   return Object.entries(tree).reduce<Record<string, number>>((accum, [key, values]) => {
-    if (key === '/') {
-      return {
-        '/': rollup(values),
-      };
-    }
-
-    if (key.lastIndexOf('/') === 0) {
-      // Level 1
-      const total = rollup(values);
-      return {
-        ...accum,
-        [key]: total,
-        '/': rollup([accum['/'], total]),
-      };
-    }
-
-    // Level 2+ lastIndexOf should be >= 1 here.
     const total = rollup(values);
     let currentSlashIndex = 0;
     while (currentSlashIndex >= 0) {
@@ -116,7 +99,6 @@ const MAX_FREE_SPACE = 30_000_000;
 
 function findDirToDeleteSize(tree: DirTree) {
   const totals = calculateTreeSize(tree);
-  console.log({ totals });
   const currentFreeSpace = TOTAL_SPACE - totals['/'];
   const freeSpaceNeeded = MAX_FREE_SPACE - currentFreeSpace;
   return Math.min(...Object.values(totals).filter((v) => v >= freeSpaceNeeded));
