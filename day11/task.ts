@@ -24,7 +24,52 @@ function getMonkeyOperation(operand: Operand, secondElem: SecondElem): Monkey['o
   }
 }
 
-function findModProduct(monkeys: Monkey[]) {
+function parseMonkeyText(monkeyText: string) {
+  // Sample Monkey Text:
+  // --------------------------------
+  // Monkey 0:
+  //   Starting items: 79, 98
+  //   Operation: new = old * 19
+  //   Test: divisible by 23
+  //     If true: throw to monkey 2
+  //     If false: throw to monkey 3
+  const [idLine, startingLine, opLine, testLine, trueLine, falseLine] = monkeyText.split('\n');
+
+  const idString = idLine.substring('Monkey '.length, idLine.length - 1);
+  const id = Number.parseInt(idString, 10);
+
+  const startingItems = startingLine
+    .substring('  Starting items: '.length)
+    .split(', ')
+    .map((num) => {
+      return Number.parseInt(num, 10);
+    });
+
+  const operationArr = opLine
+    .substring('  Operation: new = old '.length)
+    .split(' ') as [Operand, SecondElem];
+  const operation = getMonkeyOperation(...operationArr);
+
+  const divisible = Number.parseInt(testLine.substring('  Test: divisible by '.length), 10);
+
+  const ifTrue = Number.parseInt(trueLine.substring('    If true: throw to monkey '.length), 10);
+
+  const ifFalse = Number.parseInt(falseLine.substring('    If false: throw to monkey '.length), 10);
+
+  return {
+    id,
+    inspected: 0,
+    items: startingItems,
+    operate: operation,
+    test: {
+      divisible,
+      ifTrue,
+      ifFalse,
+    },
+  };
+}
+
+function findLeastCommonMultiplier(monkeys: Monkey[]) {
   return monkeys.reduce((accumulator, monkey) => {
     return accumulator * monkey.test.divisible;
   }, 1);
@@ -32,42 +77,7 @@ function findModProduct(monkeys: Monkey[]) {
 
 function monkeyTests(rounds: number, divideBy3 = true) {
   console.log(`Going through ${rounds} rounds of tests...`);
-  const MONKEYS = Deno.readTextFileSync('./input.txt').split('\n\n').map<Monkey>((monkeyText) => {
-      const [idLine, startingLine, opLine, testLine, trueLine, falseLine] = monkeyText.split('\n');
-
-      const idString = idLine.substring('Monkey '.length, idLine.length - 1);
-      const id = Number.parseInt(idString, 10);
-
-      const startingItems = startingLine
-        .substring('  Starting items: '.length)
-        .split(', ')
-        .map((num) => {
-          return Number.parseInt(num, 10);
-        });
-
-      const operationArr = opLine
-        .substring('  Operation: new = old '.length)
-        .split(' ') as [Operand, SecondElem];
-      const operation = getMonkeyOperation(...operationArr);
-
-      const divisible = Number.parseInt(testLine.substring('  Test: divisible by '.length), 10);
-
-      const ifTrue = Number.parseInt(trueLine.substring('    If true: throw to monkey '.length), 10);
-
-      const ifFalse = Number.parseInt(falseLine.substring('    If false: throw to monkey '.length), 10);
-
-      return {
-        id,
-        inspected: 0,
-        items: startingItems,
-        operate: operation,
-        test: {
-          divisible,
-          ifTrue,
-          ifFalse,
-        },
-      };
-    });
+  const MONKEYS = Deno.readTextFileSync('./input.txt').split('\n\n').map<Monkey>(parseMonkeyText);
 
   for (let round = 0; round < rounds; round++) {
     MONKEYS.forEach((monkey) => {
@@ -78,7 +88,7 @@ function monkeyTests(rounds: number, divideBy3 = true) {
         const monkeyTest = worryLevel % monkey.test.divisible === 0;
         const nextMonkeyId = monkeyTest ? monkey.test.ifTrue : monkey.test.ifFalse;
         const nextMonkey = MONKEYS[nextMonkeyId];
-        nextMonkey.items.push(worryLevel % findModProduct(MONKEYS));
+        nextMonkey.items.push(worryLevel % findLeastCommonMultiplier(MONKEYS));
         monkey.items.shift();
         monkey.inspected++;
       });
