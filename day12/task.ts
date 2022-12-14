@@ -140,7 +140,7 @@ console.log({ allStarts });
 let minPath = pathFromS;
 allStarts.forEach((start) => {
   const path = calculatePath(MAP, start, END);
-  console.log({ start, path })
+  console.log({ start, path });
   if (!path) {
     return;
   }
