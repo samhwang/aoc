@@ -11,6 +11,13 @@ const CHARS = {
   ROCK: '#',
 };
 
+function getRocksToFill(start: number, end: number) {
+  return {
+    start: Math.min(start, end),
+    end: Math.max(start, end),
+  };
+}
+
 function generateRockCoordinatesFromPath(rockPath: Coordinates[]) {
   const rockCoordinates: Coordinates[] = [...rockPath];
   for (let i = 0; i < rockPath.length - 1; i++) {
@@ -18,11 +25,8 @@ function generateRockCoordinatesFromPath(rockPath: Coordinates[]) {
     const [depth2, horizontal2] = rockPath[i + 1];
     const sameRow = horizontal1 === horizontal2;
     if (sameRow) {
-      for (
-        let d = Math.min(depth1, depth2) + 1;
-        d < Math.max(depth1, depth2);
-        d++
-      ) {
+      const { start, end } = getRocksToFill(depth1, depth2);
+      for (let d = start; d < end; d++) {
         rockCoordinates.push([d, horizontal1]);
       }
       continue;
@@ -30,11 +34,8 @@ function generateRockCoordinatesFromPath(rockPath: Coordinates[]) {
 
     const sameDepth = depth1 === depth2;
     if (sameDepth) {
-      for (
-        let h = Math.min(horizontal1, horizontal2) + 1;
-        h < Math.max(horizontal1, horizontal2);
-        h++
-      ) {
+      const { start, end } = getRocksToFill(horizontal1, horizontal2);
+      for (let h = start; h < end; h++) {
         rockCoordinates.push([depth1, h]);
       }
     }
@@ -113,6 +114,33 @@ function sandDrop(map: string[][], coordinates: Coordinates, maxDepth: number): 
   return coordinates !== SAND_DROP_POINT;
 }
 
+function scaleDownMapAfterResult(map: string[][]) {
+  let newStart = Number.MAX_SAFE_INTEGER;
+  let newEnd = 0;
+  map.forEach((line) => {
+    if (line[0] === CHARS.ROCK) {
+      // This is the floor
+      return;
+    }
+
+    const startIndex = line.findIndex((char) => char !== CHARS.AIR);
+    if (startIndex === -1) {
+      return;
+    }
+    newStart = Math.min(newStart, startIndex);
+
+    const endIndex = line.findLastIndex((char) => char !== CHARS.AIR);
+    if (endIndex === -1) {
+      return;
+    }
+    newEnd = Math.max(newEnd, endIndex);
+  });
+
+  const PADDING = 5;
+  map = map.map((line) => line.slice(newStart - PADDING, newEnd + PADDING));
+
+  return map;
+}
 
 // Task 1
 function task1() {
@@ -122,7 +150,8 @@ function task1() {
     sandCount += 1;
   }
 
-  map.forEach((line) => console.log(line.join('')));
+  const newMap = scaleDownMapAfterResult(map);
+  newMap.forEach((line) => console.log(line.join('')));
   return sandCount;
 }
 console.log('TASK 1');
@@ -139,7 +168,8 @@ function task2() {
     sandCount += 1;
   }
 
-  map.forEach((line) => console.log(line.join('')));
+  const newMap = scaleDownMapAfterResult(map);
+  newMap.forEach((line) => console.log(line.join('')));
   return sandCount + 1;
 }
 console.log('TASK 2');
