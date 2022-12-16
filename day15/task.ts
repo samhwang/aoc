@@ -2,13 +2,14 @@ type X = number;
 type Y = number;
 type Coordinates = [X, Y];
 
-function findBeaconSensorDistance(beacon: Coordinates, sensor: Coordinates) {
+function calculateManhattanDistance(beacon: Coordinates, sensor: Coordinates) {
   const [x1, y1] = beacon;
   const [x2, y2] = sensor;
   return Math.abs(x1 - x2) + Math.abs(y1 - y2);
 }
 
 function findCoordinatesFromDescription(desc: string): Coordinates {
+  // Input format: Sensor at x=2, y=18: closest beacon is at x=-2, y=15
   const startXIndex = desc.indexOf('x=');
   const commaIndex = desc.indexOf(',');
   const x = Number.parseInt(desc.substring(startXIndex + 2, commaIndex), 10);
@@ -19,90 +20,101 @@ function findCoordinatesFromDescription(desc: string): Coordinates {
   return [x, y];
 }
 
-type MapData = {
-  sensors: Coordinates[];
-  beacons: Coordinates[];
-  distances: number[];
+type Pair = {
+  sensor: Coordinates;
+  beacon: Coordinates;
+  distance: number;
 };
 
-function mapSensorAndBeacons(input: string): MapData {
+function mapSensorAndBeacons(input: string): Pair[] {
   const lines = Deno.readTextFileSync(input).split('\n');
-  const { sensors, beacons, distances } = lines.reduce<MapData>(
-    ({ sensors, beacons, distances }, line) => {
-      // Input has this format: Sensor at x=2, y=18: closest beacon is at x=-2, y=15
+  return lines.reduce<Pair[]>(
+    (accumulator, line) => {
       const [sensor, beacon] = line.split(':').map((desc) => findCoordinatesFromDescription(desc));
-      const distance = findBeaconSensorDistance(beacon, sensor);
-      sensors.push(sensor);
-      beacons.push(beacon);
-      distances.push(distance);
-
-      return { sensors, beacons, distances };
+      const distance = calculateManhattanDistance(beacon, sensor);
+      accumulator.push({ sensor, beacon, distance });
+      return accumulator;
     },
-    { sensors: [], beacons: [], distances: [] },
+    [],
   );
-
-  return { sensors, beacons, distances };
 }
 
-function pointBlocked(coordinates: Coordinates, things: Coordinates[]) {
-  return things.find((t) => t[0] === coordinates[0] && t[1] === coordinates[1]);
+function isCoveredBySensor(point: Coordinates, sensor: Pair['sensor'], distance: Pair['distance']) {
+  const distanceToPoint = calculateManhattanDistance(point, sensor);
+  return distanceToPoint <= distance;
 }
 
-function findPointsCoveredBySensor(sensor: Coordinates, distance: number): Coordinates[] {
-  const [sensorX, sensorY] = sensor;
-  const left = sensorX - distance;
-  const right = sensorX + distance;
-
-  const field: Coordinates[] = [];
-  // Left to center
-  for (let x = left; x < sensorX; x++) {
-    for (let y = 0; y <= Math.abs(left - x); y++) {
-      field.push([x, sensorY + y], [x, sensorY - y]);
-    }
-  }
-
-  // Center
-  for (let y = 1; y < distance + 1; y++) {
-    field.push([sensorX, sensorY + y], [sensorX, sensorY - y]);
-  }
-
-  // Center to right
-  for (let x = right; x > sensorX; x--) {
-    for (let y = 0; y < Math.abs(x - right); y++) {
-      field.push([x, sensorY + y], [x, sensorY - y]);
-    }
-  }
-
-  return field;
-}
-
-function task1(input: string, depth: number) {
-  const { sensors, beacons, distances } = mapSensorAndBeacons(input);
-  const coveredBySensor = sensors
-    .map((sensor, index) => findPointsCoveredBySensor(sensor, distances[index]))
-    .flat() as Coordinates[];
-
-  const filteredField: Coordinates[] = [];
-  coveredBySensor.forEach((point) => {
-    const exist = filteredField.find((p) => p[0] === point[0] && p[1] === point[1]);
-    if (!exist) {
-      filteredField.push(point);
-    }
+function detectPoint(point: Coordinates, mapData: Pair[]) {
+  const [x, y] = point;
+  const sensorsCoveringPoint = mapData.filter(({ sensor, distance }) => {
+    return isCoveredBySensor(point, sensor, distance);
   });
+  const inRange = sensorsCoveringPoint.length > 0;
 
-  const fieldOnLine = filteredField.filter((point) => {
-    return point[1] === depth && !pointBlocked(point, beacons) && !pointBlocked(point, sensors);
-  }).sort((a, b) => {
-    const x = a[0] - b[0];
-    if (x === 0) {
-      return a[1] - b[1];
+  let newX = x;
+  if (inRange) {
+    const allXReach = sensorsCoveringPoint
+      .map(({ sensor, distance }) => {
+        return getSensorXReach(y, sensor, distance);
+      })
+      .flat();
+    newX = Math.max(...allXReach);
+  }
+
+  return { inRange, newX };
+}
+
+function getSensorXReach(y: number, [sensorX, sensorY]: Pair['sensor'], distance: Pair['distance']) {
+  const deltaX = distance - Math.abs(sensorY - y);
+  return [sensorX - deltaX, sensorX + deltaX];
+}
+
+function getSensorXBoundary(y: number, mapData: Pair[]) {
+  const allX = mapData
+    .filter(({ sensor, distance }) => {
+      const [x1] = getSensorXReach(y, sensor, distance);
+      const distanceToPoint = calculateManhattanDistance(sensor, [x1, y]);
+      return distanceToPoint <= distance;
+    })
+    .map(({ sensor, distance }) => getSensorXReach(y, sensor, distance))
+    .flat();
+  return [Math.min(...allX), Math.max(...allX)];
+}
+
+// Task 1: Find how many position cannot contain a beacon in a specific depth of the map.
+function findNonBeaconsPositionsInLine(input: string, y: number) {
+  const map = mapSensorAndBeacons(input);
+
+  let [left, right] = getSensorXBoundary(y, map);
+  const minX = Number.NEGATIVE_INFINITY;
+  const maxX = Number.POSITIVE_INFINITY;
+  left = Math.max(left, minX);
+  right = Math.min(right, maxX);
+
+  let count = 0;
+  for (let x = left; x <= right; x++) {
+    const { inRange, newX } = detectPoint([x, y], map);
+    if (inRange) {
+      const r = Math.min(newX, right);
+      count = count + r - x + 1;
+      x = r;
     }
+  }
 
-    return x;
-  });
+  const beaconsOnLine = map.reduce<Coordinates[]>((accum, { beacon }) => {
+    const [beaconX, beaconY] = beacon;
+    const beaconOnLine = beaconY === y && beaconX >= left && beaconX <= right;
+    const notInAccum = accum.find(([x, y]) => x === beaconX && y === beaconY) === undefined;
+    if (beaconOnLine && notInAccum) {
+      accum.push(beacon);
+    }
+    return accum;
+  }, []);
 
-  const count = fieldOnLine.length;
-  console.log({ fieldOnLine, count });
+  const diff = count - beaconsOnLine.length;
+  return { diff, count };
 }
 console.log('TASK 1');
-task1('./input.txt', 2000000);
+const { diff, count } = findNonBeaconsPositionsInLine('./input.txt', 2000000);
+// const { diff, count } = findNonBeaconsPositionsInLine('./input2.txt', 10);
+console.log({ diff, count });
