@@ -118,3 +118,52 @@ console.log('TASK 1');
 const { diff, count } = findNonBeaconsPositionsInLine('./input.txt', 2000000);
 // const { diff, count } = findNonBeaconsPositionsInLine('./input2.txt', 10);
 console.log({ diff, count });
+
+// Task 2: Find the distress beacon of the whole map and get its tuning frequency.
+const ABSOLUTE_MIN = 0;
+const ABSOLUTE_MAX = 4_000_000;
+
+function getSensorYBoundary([_, sensorY]: Pair['sensor'], distance: Pair['distance'], maxSize: number) {
+  const minY = Math.max(ABSOLUTE_MIN, sensorY - distance + 1);
+  const maxY = Math.min(maxSize, sensorY + distance + 1);
+  return [minY, maxY];
+}
+
+function isCoveredByMap(point: Coordinates, map: Pair[]) {
+  return map.some(({ sensor, distance }) => calculateManhattanDistance(point, sensor) <= distance);
+}
+
+function getTuningFrequency([x, y]: Coordinates) {
+  return x * ABSOLUTE_MAX + y;
+}
+
+function task2(input: string, size: number) {
+  const map = mapSensorAndBeacons(input);
+  for (let i = 0; i < map.length; i++) {
+    const { sensor, distance } = map[i];
+    let deltaX = 0;
+    const [minY, maxY] = getSensorYBoundary(sensor, distance, size);
+
+    const [sensorX, sensorY] = sensor;
+    for (let y = minY; y <= maxY; y++) {
+      const targets: Coordinates[] = deltaX === 0 ? [[sensorX, y]] : [
+        [sensorX + deltaX, y],
+        [sensorX - deltaX, y],
+      ];
+
+      const found = targets
+        .filter(([targetX]) => targetX >= 0 && targetX <= size)
+        .find((target) => !isCoveredByMap(target, map));
+      if (found) {
+        const frequency = getTuningFrequency(found);
+        return frequency;
+      }
+
+      deltaX = y <= sensorY ? deltaX + 1 : deltaX - 1;
+    }
+  }
+}
+console.log('TASK 2');
+const frequency = task2('./input.txt', ABSOLUTE_MAX);
+// const frequency = task2('./input2.txt', 20);
+console.log({ frequency });
