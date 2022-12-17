@@ -1,7 +1,7 @@
 const TIME_LIMIT_MINUTES = 30;
 
 class Valve {
-  public readonly to: Record<Valve['name'], number>;
+  public to: Record<Valve['name'], number>;
 
   constructor(
     public readonly name: string,
@@ -39,12 +39,6 @@ function createValveMap(input: string) {
     }, []);
 }
 
-function findValvesToOpen(map: Valve[]) {
-  return map.reduce<Valve[]>((toOpen, valve) => {
-    return valve.flowRate <= 0 ? toOpen : [...toOpen, valve];
-  }, []);
-}
-
 function findPath(start: string, map: Valve[]): Record<Valve['name'], number> {
   const startValve = getValve(map, start)!;
   const visited: Record<Valve['name'], number> = {};
@@ -69,8 +63,9 @@ function findPath(start: string, map: Valve[]): Record<Valve['name'], number> {
   return visited;
 }
 
-function calculatePathToValves(map: Valve[], valvesToOpen: Valve[]) {
-  return valvesToOpen.reduce<Record<Valve['name'], Record<Valve['name'], number>>>(
+type PathMap = Record<Valve['name'], Record<Valve['name'], number>>;
+function calculatePathToValves(map: Valve[]) {
+  return map.reduce<PathMap>(
     (accumulator, valve) => {
       accumulator[valve.name] = findPath(valve.name, map);
       return accumulator;
@@ -79,6 +74,28 @@ function calculatePathToValves(map: Valve[], valvesToOpen: Valve[]) {
       AA: findPath('AA', map),
     },
   );
+}
+
+function addPathToMap(map: Valve[], paths: PathMap) {
+  return map.map((valve) => {
+    valve.to = {
+      ...valve.to,
+      ...paths[valve.name],
+    }
+  });
+}
+
+function openValve(map: Valve[], name: Valve['name']) {
+  return map.reduce<Valve[]>((accum, valve) => {
+    if (valve.name !== name) {
+      accum.push(valve);
+      return accum;
+    }
+
+    valve.open = true;
+    accum.push(valve);
+    return accum;
+  }, []);
 }
 
 function calculatePressure(map: Valve[]) {
@@ -90,15 +107,71 @@ function calculatePressure(map: Valve[]) {
 // Task 1: Find the most pressure can be release
 function task1(input: string, timeLimit: number) {
   const valves = createValveMap(input);
-  const valvesToOpen = findValvesToOpen(valves);
-  const paths = calculatePathToValves(valves, valvesToOpen);
-  console.log({ valves, valvesToOpen, paths });
+  const paths = calculatePathToValves(valves);
+  addPathToMap(valves, paths);
+  console.log({
+    valves: valves.map((v) => ({ name: v.name, to: v.to, flowRate: v.flowRate })),
+    paths,
+  });
 
+  const filteredValves = valves.filter((v) => v.flowRate > 0);
   let currentPressure = 0;
-  let visited = ['AA'];
-  let minute = timeLimit;
-  while (minute > 0) {
-    minute--;
+  let currentPoint = 'AA';
+  let timeRemaining = timeLimit;
+  while (timeRemaining > 0) {
+    console.log('-----------------------------------------------');
+    console.log('TIME REMAINING: ', timeRemaining);
+    const priorities = filteredValves
+      .filter((v) => !v.open)
+      .sort((a, b) => {
+        const sortByDistance = paths[currentPoint][a.name] - paths[currentPoint][b.name];
+        if (sortByDistance === 0) {
+          return b.flowRate - a.flowRate;
+        }
+
+        return sortByDistance;
+      });
+
+    if (priorities.length <= 0) {
+      console.log({
+        currentPoint,
+        priorities: priorities.map((v) => ({ name: v.name, flowRate: v.flowRate })),
+        toOpen: undefined,
+        currentPressure
+      });
+      const addPressure = calculatePressure(valves) * timeRemaining;
+      currentPressure = currentPressure + addPressure;
+      console.log({ minuteToPass: timeRemaining, addPressure, currentPressure });
+      timeRemaining = 0;
+      continue;
+    }
+
+    const toOpen = priorities[0];
+    console.log({
+      currentPoint,
+      priorities: priorities.map((v) => {
+        return {
+          name: v.name,
+          flowRate: v.flowRate,
+          distanceFromCurrent: paths[currentPoint][v.name],
+        }
+      }),
+      toOpen: {
+        name: toOpen.name,
+        flowRate: toOpen.flowRate,
+        distanceFromCurrent: paths[currentPoint][toOpen.name],
+      },
+      currentPressure
+    });
+    const travelTime = paths[currentPoint][toOpen.name];
+    const pressureBeforeOpenValve = calculatePressure(filteredValves) * travelTime;
+    openValve(filteredValves, toOpen.name);
+    const addPressure = pressureBeforeOpenValve + calculatePressure(filteredValves);
+    currentPressure = currentPressure + addPressure;
+    const minuteToPass = paths[currentPoint][toOpen.name] + 1;
+    timeRemaining = timeRemaining - minuteToPass;
+    currentPoint = toOpen.name;
+    console.log({ minuteToPass, addPressure, currentPressure });
   }
 
   return currentPressure;
