@@ -1,0 +1,23 @@
+{
+  "name": "@samhwang/aoc-2023",
+  "version": "1.0.0",
+  "description": "Advent of Code 2023",
+  "engines": {
+    "node": "^20.0.0",
+    "pnpm": "^8.0.0"
+  },
+  "packageManager": "pnpm@8.6.10",
+  "scripts": {
+    "lint": "biome check ./src/**.ts",
+    "lint:fix": "biome check --apply ./src/**.ts",
+    "lint:fix:unsafe": "biome check --apply-unsafe ./src/**.ts",
+    "format": "biome format --write ./src/**.ts",
+    "ci": "biome ci ./src/**.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.0.0",
+    "@types/node": "^20.0.0",
+    "tsx": "^3.12.7",
+    "typescript": "^5.1.6"
+  }
+}
