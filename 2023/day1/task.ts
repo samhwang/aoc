@@ -7,26 +7,30 @@ function parseInput(): string[] {
   return input.split('\n');
 }
 
-function getNumberFromLine1(line: string): number {
-  const digits = line.split('').reduce(
-    (acc, char) => {
-      const charToNumber = Number.parseInt(char, 10);
-      if (Number.isNaN(charToNumber)) {
-        return acc;
-      }
+function charIsNumber(char: string): boolean {
+  return !Number.isNaN(Number.parseInt(char, 10));
+}
 
-      acc.push(charToNumber);
-      return acc;
-    },
-    [] as number[]
-  );
+function getNumberFromLine1(line: string): number {
+  const digits: string[] = [];
+  let lineClone = line;
+  const currentIndex = 0;
+
+  while (currentIndex < lineClone.length) {
+    if (charIsNumber(lineClone[currentIndex])) {
+      digits.push(lineClone.charAt(currentIndex));
+    }
+    lineClone = lineClone.slice(1);
+  }
+
   return Number.parseInt(`${digits[0]}${digits[digits.length - 1]}`, 10);
 }
 
 function part1(input: string[]): number {
   return input.reduce((acc, line) => {
-    const result = getNumberFromLine1(line);
-    console.log({ result });
+    if (line.length === 0) {
+      return acc;
+    }
     return acc + getNumberFromLine1(line);
   }, 0);
 }
