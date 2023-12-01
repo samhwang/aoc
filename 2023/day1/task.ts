@@ -1,11 +1,4 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
-function parseInput(): string[] {
-  const inputPath = path.resolve('.', 'input.txt');
-  const input = fs.readFileSync(inputPath, { encoding: 'utf-8' });
-  return input.split('\n');
-}
+import { parseInput } from '../src/parse-input';
 
 function charIsNumber(char: string): boolean {
   return !Number.isNaN(Number.parseInt(char, 10));
@@ -100,7 +93,7 @@ function part2(input: string[]): number {
 }
 
 function go() {
-  const input = parseInput();
+  const input = parseInput('./input.txt');
 
   const res1 = part1(input);
   console.log('PART 1: ', res1);
