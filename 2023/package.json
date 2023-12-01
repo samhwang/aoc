@@ -19,5 +19,9 @@
     "@types/node": "^20.0.0",
     "tsx": "^3.12.7",
     "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "commander": "^11.1.0",
+    "wretch": "^2.7.1"
   }
 }
