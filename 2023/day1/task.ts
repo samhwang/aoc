@@ -99,7 +99,7 @@ function part2(input: string[]): number {
   }, 0);
 }
 
-async function go() {
+function go() {
   const input = parseInput();
 
   const res1 = part1(input);
