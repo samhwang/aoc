@@ -15,20 +15,20 @@ function isGameValid(line: string, max: GameSet): boolean {
     let red = 0;
     let green = 0;
     let blue = 0;
-    const grabs = set.split(', ') as Cubes[];
+    const grabs = set.split(',') as Cubes[];
     for (const grab of grabs) {
-      const [count, color] = grab.split(' ') as [number, Color];
+      const [count, color] = grab.trim().split(' ') as [string, Color];
       switch (color) {
         case 'red':
-          red = count;
+          red = Number.parseInt(count, 10);
           break;
 
         case 'green':
-          green = count;
+          green = Number.parseInt(count, 10);
           break;
 
         case 'blue':
-          blue = count;
+          blue = Number.parseInt(count, 10);
       }
     }
 
@@ -61,8 +61,50 @@ function part1(input: string[]): number {
   return sum;
 }
 
+function getBiggestNumber(a: number, b: number) {
+  return a > b ? a : b;
+}
+
+function calculateCubePower(line: string): number {
+  let MIN_RED = 0;
+  let MIN_GREEN = 0;
+  let MIN_BLUE = 0;
+
+  const sets = line.substring(line.indexOf(': ') + 2).split(';');
+  for (const set of sets) {
+    const grabs = set.split(',') as Cubes[];
+    for (const grab of grabs) {
+      const [count, color] = grab.trim().split(' ') as [string, Color];
+      switch (color) {
+        case 'red':
+          MIN_RED = getBiggestNumber(MIN_RED, Number.parseInt(count, 10));
+          break;
+
+        case 'green':
+          MIN_GREEN = getBiggestNumber(MIN_GREEN, Number.parseInt(count, 10));
+          break;
+
+        case 'blue':
+          MIN_BLUE = getBiggestNumber(MIN_BLUE, Number.parseInt(count, 10));
+      }
+    }
+  }
+
+  return MIN_RED * MIN_GREEN * MIN_BLUE;
+}
+
 function part2(input: string[]): number {
-  return 0;
+  const sum = input.reduce((sum, line) => {
+    if (line === '') {
+      return sum;
+    }
+
+    const power = calculateCubePower(line);
+
+    return sum + power;
+  }, 0);
+
+  return sum;
 }
 
 function go() {
