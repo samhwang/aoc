@@ -38,8 +38,26 @@ npx tsx task.ts
   const readmePath = path.join(outputDir, 'README.md');
   fs.writeFileSync(readmePath, README_TEMPLATE);
 
+  const TASK_TEMPLATE = `import { parseInput } from '../src/parse-input';
+
+function part1(input: string[]) {}
+
+function part2(input: string[]) {}
+
+function go() {
+  const input = parseInput('./input.txt');
+
+  const res1 = part1(input);
+  console.log('PART 1: ', res1);
+
+  const res2 = part2(input);
+  console.log('PART 2: ', res2);
+}
+
+go();
+`;
   const taskPath = path.join(outputDir, 'task.ts');
-  fs.writeFileSync(taskPath, '');
+  fs.writeFileSync(taskPath, TASK_TEMPLATE);
 }
 
 export async function scaffoldCommand(year: string, day: string, session: string, output: string) {
