@@ -7,17 +7,17 @@ type GameSet = {
 };
 
 type Color = 'red' | 'green' | 'blue';
-type Cubes = `${number} ${Color} `
+type Cubes = `${number} ${Color} `;
 
-function isGameValid1(line: string, max: GameSet): boolean {
+function isGameValid(line: string, max: GameSet): boolean {
   const sets = line.substring(line.indexOf(': ') + 2).split(';');
   for (const set of sets) {
     let red = 0;
     let green = 0;
     let blue = 0;
-    const grabs = set.split(',') as Cubes[];
+    const grabs = set.split(', ') as Cubes[];
     for (const grab of grabs) {
-      const [count, color] = grab.trim().split(' ') as [number, Color];
+      const [count, color] = grab.split(' ') as [number, Color];
       switch (color) {
         case 'red':
           red = count;
@@ -50,8 +50,7 @@ function part1(input: string[]): number {
       return sum;
     }
 
-    const isValid = isGameValid1(line, { red: MAX_RED, green: MAX_GREEN, blue: MAX_BLUE });
-    console.log({ line, isValid })
+    const isValid = isGameValid(line, { red: MAX_RED, green: MAX_GREEN, blue: MAX_BLUE });
     if (isValid) {
       return sum + index + 1;
     }
