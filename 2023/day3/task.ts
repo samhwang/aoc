@@ -78,28 +78,62 @@ function part1(map: string[]): number {
 
 const GEAR = '*';
 
-function calculateGearRatio(map: string[], row: number, col: number): number {
+function calculateGearRatio(map: string[], currentRow: number, currentCol: number): number {
   const MAX_COL = map[0].length - 1;
   const MAX_ROW = map.length - 1;
-  let ratio = 1;
   const coordinates: [number, number][] = [];
+  const numbers: number[] = [];
 
-  for (let r = row - 1; r <= row + 1; r++) {
+  // Get all coordinates
+  for (let r = currentRow - 1; r <= currentRow + 1; r++) {
     if (r < 0 || r > MAX_ROW) {
       continue;
     }
 
-    for (let c = col - 1; c <= col + 1; c++) {
+    for (let c = currentCol - 1; c <= currentCol + 1; c++) {
       if (c < 0 || c > MAX_COL) {
         continue;
       }
       if (isNumber(map[r][c])) {
-        coordinates.push([r, c])
+        // If the adjacent coordinate already in the coordinates array, skip it
+        if (!!coordinates.find(([r1, c1]) => r1 === r && c1 === c - 1) || coordinates.find(([r1, c1]) => r1 === r && c1 === c + 1)) {
+          continue;
+        }
+        coordinates.push([r, c]);
       }
     }
   }
 
   console.log({ coordinates });
+  for (const [row, col] of coordinates) {
+    let numString = map[row][col];
+
+    for (let c = col - 1; c >= 0; c--) {
+      if (!isNumber(map[row][c])) {
+        break;
+      }
+
+      numString = `${map[row][c]}${numString}`;
+    }
+    for (let c = col + 1; c <= MAX_COL; c++) {
+      if (!isNumber(map[row][c])) {
+        break;
+      }
+
+      numString = `${numString}${map[row][c]}`;
+    }
+    console.log({ numString });
+
+    const num = Number.parseInt(numString, 10);
+    numbers.push(num);
+  }
+
+  console.log(numbers);
+  if (numbers.length === 0) {
+    return 0;
+  }
+
+  return numbers.reduce((acc, num) => acc * num, 1);
 }
 
 function part2(map: string[]): number {
@@ -112,7 +146,9 @@ function part2(map: string[]): number {
         continue;
       }
 
-      calculateGearRatio(map, row, col);
+      const gearRatio = calculateGearRatio(map, row, col);
+      console.log({ gearRatio })
+      sum += gearRatio;
     }
   }
 
