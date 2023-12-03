@@ -95,17 +95,22 @@ function calculateGearRatio(map: string[], currentRow: number, currentCol: numbe
         continue;
       }
       if (isNumber(map[r][c])) {
-        // If the adjacent coordinate already in the coordinates array, skip it
-        if (!!coordinates.find(([r1, c1]) => r1 === r && c1 === c - 1) || coordinates.find(([r1, c1]) => r1 === r && c1 === c + 1)) {
-          continue;
-        }
         coordinates.push([r, c]);
       }
     }
   }
 
   console.log({ coordinates });
-  for (const [row, col] of coordinates) {
+  for (let index = 0; index < coordinates.length; index++) {
+    const [row, col] = coordinates[index];
+
+    // Filter out adjacent coordinates
+    // Since we scan from left to right, we only need to check the previous coordinate
+    // is in the list. If it does, we can skip the scan for the current coordinate.
+    if (coordinates.find(([r, c]) => r === row && c === col - 1)) {
+      continue;
+    }
+
     let numString = map[row][col];
 
     for (let c = col - 1; c >= 0; c--) {
@@ -129,7 +134,7 @@ function calculateGearRatio(map: string[], currentRow: number, currentCol: numbe
   }
 
   console.log(numbers);
-  if (numbers.length === 0) {
+  if (numbers.length !== 2) {
     return 0;
   }
 
@@ -156,7 +161,7 @@ function part2(map: string[]): number {
 }
 
 function go() {
-  const input = parseInput('./sample.txt');
+  const input = parseInput('./input.txt');
 
   const res1 = part1(input);
   console.log('PART 1: ', res1);
