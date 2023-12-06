@@ -1,7 +1,7 @@
 import { parseInput } from '../src/parse-input';
 
 type Race = { maxTime: number; recordDistance: number };
-function parseRace(input: string[]) {
+function parseRace1(input: string[]) {
   const timeLine = input[0]
     .substring(input[0].indexOf(':') + 1)
     .split(' ')
@@ -37,13 +37,36 @@ function calculateWinPossibilities({ maxTime, recordDistance }: Race): number {
 }
 
 function part1(input: string[]) {
-  const raceInput = parseRace(input);
+  const raceInput = parseRace1(input);
   const winPossibilities = raceInput.map(calculateWinPossibilities);
 
   return winPossibilities.reduce((acc, curr) => acc * curr, 1);
 }
 
-function part2(input: string[]) {}
+function parseRace2(input: string[]): Race {
+  const timeLine = input[0]
+    .substring(input[0].indexOf(':') + 1)
+    .split(' ')
+    .filter((item) => item !== '')
+    .join('');
+  const distanceLine = input[1]
+    .substring(input[1].indexOf(':') + 1)
+    .split(' ')
+    .filter((item) => item !== '')
+    .join('');
+
+  return {
+    maxTime: Number.parseInt(timeLine, 10),
+    recordDistance: Number.parseInt(distanceLine, 10),
+  };
+}
+
+function part2(input: string[]) {
+  const race = parseRace2(input);
+
+  const winPossibilities = calculateWinPossibilities(race);
+  return winPossibilities;
+}
 
 function go() {
   const input = parseInput('./input.txt');
