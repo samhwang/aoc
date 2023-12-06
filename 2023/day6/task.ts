@@ -21,15 +21,32 @@ function parseRace(input: string[]) {
   return raceInput;
 }
 
+function calculateWinPossibilities({ maxTime, recordDistance }: Race): number {
+  let sum = 0;
+  for (let hold = 0; hold <= maxTime; hold++) {
+    const speed = hold;
+    const restTime = maxTime - hold;
+    const distance = speed * restTime;
+    const win = distance > recordDistance;
+    if (win) {
+      sum++;
+    }
+  }
+
+  return sum;
+}
+
 function part1(input: string[]) {
   const raceInput = parseRace(input);
-  console.log({ raceInput });
+  const winPossibilities = raceInput.map(calculateWinPossibilities);
+
+  return winPossibilities.reduce((acc, curr) => acc * curr, 1);
 }
 
 function part2(input: string[]) {}
 
 function go() {
-  const input = parseInput('./sample.txt');
+  const input = parseInput('./input.txt');
 
   const res1 = part1(input);
   console.log('PART 1: ', res1);
