@@ -95,6 +95,11 @@ function part2(input: string[]) {
     'humidity-to-location map:',
   ].map((mapName) => createMapInput(input, mapName));
 
+  // Calculation
+  // Find the overlap points of seedInput and seedSoilMap, then cut those overlaps into a different set to convert the values, then we have the soilInput
+  // Do the same for the rest of the conversion seed => soil => fertilizer => water => light => temperature => humidity => location
+  // from the location Input, we can find the lowest value of all the sets.
+
   const locations = [];
   // const locations = seeds.map((seed) => {
   //   const soil = findFromMap1(seedSoilMap, seed);
