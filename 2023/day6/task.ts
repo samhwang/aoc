@@ -2,16 +2,14 @@ import { parseInput } from '../src/parse-input';
 
 type Race = { maxTime: number; recordDistance: number };
 function parseRace1(input: string[]) {
-  const timeLine = input[0]
-    .substring(input[0].indexOf(':') + 1)
-    .split(' ')
-    .filter((item) => item !== '')
-    .map((time) => Number.parseInt(time, 10));
-  const distanceLine = input[1]
-    .substring(input[1].indexOf(':') + 1)
-    .split(' ')
-    .filter((item) => item !== '')
-    .map((distance) => Number.parseInt(distance, 10));
+  const parseLine = (line: string) =>
+    line
+      .substring(line.indexOf(':') + 1)
+      .split(' ')
+      .filter((item) => item !== '')
+      .map((item) => Number.parseInt(item, 10));
+  const timeLine = parseLine(input[0]);
+  const distanceLine = parseLine(input[1]);
 
   const raceInput: Race[] = [];
   for (let i = 0; i < timeLine.length; i++) {
@@ -44,16 +42,14 @@ function part1(input: string[]) {
 }
 
 function parseRace2(input: string[]): Race {
-  const timeLine = input[0]
-    .substring(input[0].indexOf(':') + 1)
-    .split(' ')
-    .filter((item) => item !== '')
-    .join('');
-  const distanceLine = input[1]
-    .substring(input[1].indexOf(':') + 1)
-    .split(' ')
-    .filter((item) => item !== '')
-    .join('');
+  const parseLine = (line: string) =>
+    line
+      .substring(line.indexOf(':') + 1)
+      .split(' ')
+      .filter((item) => item !== '')
+      .join('');
+  const timeLine = parseLine(input[0]);
+  const distanceLine = parseLine(input[1]);
 
   return {
     maxTime: Number.parseInt(timeLine, 10),
