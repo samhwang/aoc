@@ -14,6 +14,7 @@ function createMapInput(map: string[], mapName: string): MapInput[] {
     mapInput.push({ destination, source, range });
   }
 
+  mapInput.sort((a, b) => a.source - b.source);
   return mapInput;
 }
 
@@ -59,17 +60,30 @@ function part1(input: string[]) {
   return Math.min(...locations);
 }
 
+type SeedInput = { start: number; range: number };
+
+function createSeedInput(seedLine: string): SeedInput[] {
+  const seedInput: SeedInput[] = [];
+  const split = seedLine.substring(seedLine.indexOf(':') + 2).split(' ');
+  for (let i = 0; i < split.length; i = i + 2) {
+    const start = Number.parseInt(split[i].trim(), 10);
+    const range = Number.parseInt(split[i + 1].trim(), 10);
+    seedInput.push({ start, range });
+  }
+
+  seedInput.sort((a, b) => a.start - b.start);
+  return seedInput;
+}
+
+function findSetFromMap(map: MapInput[], inputSet: SeedInput[]): number[] {
+  const resultSet: number[] = [];
+
+  return resultSet;
+}
+
 function part2(input: string[]) {
   const seedLine = input[0];
-  const seeds: number[] = [];
-  const seedInput = seedLine.substring(seedLine.indexOf(':') + 2).split(' ');
-  for (let i = 0; i < seedInput.length; i = i + 2) {
-    const seed = Number.parseInt(seedInput[i].trim(), 10);
-    const count = Number.parseInt(seedInput[i + 1].trim(), 10);
-    for (let j = 0; j < count; j++) {
-      seeds.push(seed + j);
-    }
-  }
+  const seedInput = createSeedInput(seedLine);
 
   const [seedSoilMap, soilFertilizerMap, fertiizerWaterMap, waterLightMap, lightTemperatureMap, temperatureHumidityMap, humidityLocationMap] = [
     'seed-to-soil map:',
@@ -81,17 +95,18 @@ function part2(input: string[]) {
     'humidity-to-location map:',
   ].map((mapName) => createMapInput(input, mapName));
 
-  const locations = seeds.map((seed) => {
-    const soil = findFromMap1(seedSoilMap, seed);
-    const fertiizer = findFromMap1(soilFertilizerMap, soil);
-    const water = findFromMap1(fertiizerWaterMap, fertiizer);
-    const light = findFromMap1(waterLightMap, water);
-    const temperature = findFromMap1(lightTemperatureMap, light);
-    const humidity = findFromMap1(temperatureHumidityMap, temperature);
-    const location = findFromMap1(humidityLocationMap, humidity);
+  const locations = [];
+  // const locations = seeds.map((seed) => {
+  //   const soil = findFromMap1(seedSoilMap, seed);
+  //   const fertiizer = findFromMap1(soilFertilizerMap, soil);
+  //   const water = findFromMap1(fertiizerWaterMap, fertiizer);
+  //   const light = findFromMap1(waterLightMap, water);
+  //   const temperature = findFromMap1(lightTemperatureMap, light);
+  //   const humidity = findFromMap1(temperatureHumidityMap, temperature);
+  //   const location = findFromMap1(humidityLocationMap, humidity);
 
-    return location;
-  });
+  //   return location;
+  // });
 
   return Math.min(...locations);
 }
