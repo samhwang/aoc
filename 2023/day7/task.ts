@@ -89,11 +89,15 @@ function part1(input: string[]) {
           continue;
         }
 
-        compare = CARDS.indexOf(b.cards[i]) - CARDS.indexOf(a.cards[i]);
+        const cardA = a.cards[i];
+        const indexA = CARDS.indexOf(cardA);
+        const cardB = b.cards[i];
+        const indexB = CARDS.indexOf(cardB);
+        compare = indexA - indexB;
+        break;
       }
       return compare;
     });
-  console.log(scores);
 
   const totalWin = scores.reduce((acc, hand, index) => {
     const result = acc + hand.bid * (index + 1);
