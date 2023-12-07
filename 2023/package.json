@@ -6,7 +6,7 @@
     "node": "^20.0.0",
     "pnpm": "^8.0.0"
   },
-  "packageManager": "pnpm@8.6.10",
+  "packageManager": "pnpm@8.11.0",
   "scripts": {
     "lint": "biome check ./src/**.ts",
     "lint:fix": "biome check --apply ./src/**.ts",
@@ -15,10 +15,10 @@
     "ci": "biome ci ./src/**.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.0.0",
-    "@types/node": "^20.0.0",
-    "tsx": "^3.12.7",
-    "typescript": "^5.1.6"
+    "@biomejs/biome": "^1.4.1",
+    "@types/node": "^20.10.4",
+    "tsx": "^4.6.2",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "commander": "^11.1.0",
