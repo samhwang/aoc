@@ -1,7 +1,8 @@
 import { parseInput } from '../src/parse-input';
 
-const CARDS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'] as const;
-type Card = (typeof CARDS)[number];
+const CARDS1 = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'] as const;
+const CARDS2 = ['J', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'Q', 'K', 'A'] as const;
+type Card = (typeof CARDS1 | typeof CARDS2)[number];
 type Hand = { cards: Card[]; bid: number };
 function parseHands(input: string[]): Hand[] {
   return input
@@ -26,7 +27,7 @@ const HAND_SCORE = {
   HIGH_CARD: 0,
 } as const;
 
-function calculateHandScore(cards: Hand['cards']): (typeof HAND_SCORE)[keyof typeof HAND_SCORE] {
+function calculateHandScore1(cards: Hand['cards']): (typeof HAND_SCORE)[keyof typeof HAND_SCORE] {
   const cardCounts = cards.reduce(
     (acc, card) => {
       acc[card] = acc[card] ? acc[card] + 1 : 1;
@@ -75,7 +76,7 @@ function part1(input: string[]) {
 
   const scores = hands
     .map((hand) => {
-      const score = calculateHandScore(hand.cards);
+      const score = calculateHandScore1(hand.cards);
       return { ...hand, score };
     })
     .sort((a, b) => {
@@ -90,9 +91,9 @@ function part1(input: string[]) {
         }
 
         const cardA = a.cards[i];
-        const indexA = CARDS.indexOf(cardA);
+        const indexA = CARDS1.indexOf(cardA);
         const cardB = b.cards[i];
-        const indexB = CARDS.indexOf(cardB);
+        const indexB = CARDS1.indexOf(cardB);
         compare = indexA - indexB;
         break;
       }
