@@ -2,8 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import wretch from 'wretch';
 
-async function downloadAOCInput(year: string, day: string, session: string, outputDir: string) {
-  const result = await wretch('https://adventofcode.com')
+const aocClient = wretch('https://adventofcode.com')
+
+async function downloadAOCInput(year: string, day: string, session: string, outputDir: string): Promise<void> {
+  const result = await aocClient
     .url(`/${year}/day/${day}/input`)
     .options({ credentials: 'same-origin' })
     .headers({
@@ -28,8 +30,27 @@ export async function fetchCommand(year: string, day: string, session: string, o
   }
 }
 
-async function scaffoldAOCFolder(year: string, day: string, outputDir: string) {
-  const README_TEMPLATE = `[Day ${day}: Title](https://adventofcode.com/${year}/day/${day} "Day ${day}: Title")
+export async function fetchTitle(year: string, day: string, session: string): Promise<string> {
+  const document = await aocClient
+    .url(`/${year}/day/${day}`)
+    .options({ credentials: 'same-origin' })
+    .headers({
+      Cookie: `session=${session}`,
+    })
+    .get()
+    .text();
+  console.log({ document })
+  const titleRegex = /(---) (Day) (\d+): (.+) (---)/g
+  const fullTitle = document.match(titleRegex)
+  if (!fullTitle) {
+    return `Day ${day}: unknown title`
+  }
+
+  return fullTitle[0].replaceAll('-', '').trim()
+}
+
+async function scaffoldAOCFolder(year: string, day: string, outputDir: string, title: string) {
+  const README_TEMPLATE = `[${title}](https://adventofcode.com/${year}/day/${day} "${title}")
 
 \`\`\`shell
 npx vite-node task.ts
@@ -67,7 +88,9 @@ export async function scaffoldCommand(year: string, day: string, session: string
     fs.mkdirSync(outputDir);
 
     await downloadAOCInput(year, day, session, outputDir);
-    await scaffoldAOCFolder(year, day, outputDir);
+
+    const title = await fetchTitle(year, day, session)
+    await scaffoldAOCFolder(year, day, outputDir, title);
     console.log(`AOC INPUT FOR YEAR ${year} DAY ${day} SCAFFOLDED SUCCESSFULLY!`);
   } catch (error) {
     console.error('ERROR SCAFFOLDING AOC INPUT: ', error);
