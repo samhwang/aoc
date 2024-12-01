@@ -30,7 +30,20 @@ function part1(input: string[]) {
   return output;
 }
 
-function part2(input: string[]) {}
+// PART 2: Calculate Similarity between the 2 lists
+
+function part2(input: string[]) {
+  const [leftList, rightList] = parseIntoList(input);
+
+  let output = 0;
+  for (let i = 0; i < leftList.length; i++) {
+    const target = leftList[i]
+    const occurences = rightList.filter((num) => num === target).length
+
+    output += target * occurences
+  }
+  return output
+}
 
 function go() {
   const input = parseInput('./input.txt');
