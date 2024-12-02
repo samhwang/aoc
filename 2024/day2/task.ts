@@ -43,10 +43,6 @@ function isSafeReport(report: number[]): boolean {
 
 function part1(input: string[]): number {
   return input.reduce((accum, line) => {
-    if (line.trim().length === 0) {
-      return accum;
-    }
-
     const report = line.split(' ').map((score) => Number.parseInt(score, 10));
     const safeReport = isSafeReport(report);
     if (safeReport) {
@@ -77,10 +73,6 @@ function isFixable(report: number[]): boolean {
 
 function part2(input: string[]): number {
   return input.reduce((accum, line) => {
-    if (line.trim().length === 0) {
-      return accum;
-    }
-
     const report = line.split(' ').map((score) => Number.parseInt(score, 10));
     const safeReport = isSafeReport(report);
     if (safeReport) {

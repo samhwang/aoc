@@ -3,10 +3,6 @@ import { parseInput } from '../src/parse-input';
 function parseIntoList(input: string[]): [number[], number[]] {
   return input.reduce(
     ([leftList, rightList], line) => {
-      if (line.trim().length === 0) {
-        return [leftList, rightList];
-      }
-
       const [left, right] = line.split('  ').map((char) => Number.parseInt(char, 10));
       leftList.push(left);
       rightList.push(right);
