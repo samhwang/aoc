@@ -18,7 +18,7 @@ function parseIntoList(input: string[]): [number[], number[]] {
 
 // PART 1: Calculate distance between ascending pairs
 
-function part1(input: string[]) {
+function part1(input: string[]): number {
   const [leftList, rightList] = parseIntoList(input);
   leftList.sort((a, b) => a - b);
   rightList.sort((a, b) => a - b);
@@ -32,7 +32,7 @@ function part1(input: string[]) {
 
 // PART 2: Calculate Similarity between the 2 lists
 
-function part2(input: string[]) {
+function part2(input: string[]): number {
   const [leftList, rightList] = parseIntoList(input);
 
   let output = 0;
@@ -45,7 +45,7 @@ function part2(input: string[]) {
   return output;
 }
 
-function go() {
+function go(): void {
   const input = parseInput('./input.txt');
 
   const res1 = part1(input);

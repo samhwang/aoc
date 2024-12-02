@@ -96,7 +96,7 @@ function part2(input: string[]): number {
   }, 0);
 }
 
-function go() {
+function go(): void {
   const input = parseInput('./input.txt');
 
   const res1 = part1(input);
