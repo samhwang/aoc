@@ -37,12 +37,12 @@ function part2(input: string[]) {
 
   let output = 0;
   for (let i = 0; i < leftList.length; i++) {
-    const target = leftList[i]
-    const occurences = rightList.filter((num) => num === target).length
+    const target = leftList[i];
+    const occurences = rightList.filter((num) => num === target).length;
 
-    output += target * occurences
+    output += target * occurences;
   }
-  return output
+  return output;
 }
 
 function go() {

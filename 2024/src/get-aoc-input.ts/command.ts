@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import wretch from 'wretch';
 
-const aocClient = wretch('https://adventofcode.com')
+const aocClient = wretch('https://adventofcode.com');
 
 async function downloadAOCInput(year: string, day: string, session: string, outputDir: string): Promise<void> {
   const result = await aocClient
@@ -39,14 +39,14 @@ export async function fetchTitle(year: string, day: string, session: string): Pr
     })
     .get()
     .text();
-  console.log({ document })
-  const titleRegex = /(---) (Day) (\d+): (.+) (---)/g
-  const fullTitle = document.match(titleRegex)
+  console.log({ document });
+  const titleRegex = /(---) (Day) (\d+): (.+) (---)/g;
+  const fullTitle = document.match(titleRegex);
   if (!fullTitle) {
-    return `Day ${day}: unknown title`
+    return `Day ${day}: unknown title`;
   }
 
-  return fullTitle[0].replaceAll('-', '').trim()
+  return fullTitle[0].replaceAll('-', '').trim();
 }
 
 async function scaffoldAOCFolder(year: string, day: string, outputDir: string, title: string) {
@@ -89,7 +89,7 @@ export async function scaffoldCommand(year: string, day: string, session: string
 
     await downloadAOCInput(year, day, session, outputDir);
 
-    const title = await fetchTitle(year, day, session)
+    const title = await fetchTitle(year, day, session);
     await scaffoldAOCFolder(year, day, outputDir, title);
     console.log(`AOC INPUT FOR YEAR ${year} DAY ${day} SCAFFOLDED SUCCESSFULLY!`);
   } catch (error) {
