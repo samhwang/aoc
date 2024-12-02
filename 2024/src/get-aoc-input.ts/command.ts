@@ -2,17 +2,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import wretch from 'wretch';
 
-const aocClient = wretch('https://adventofcode.com');
-
-async function downloadAOCInput(year: string, day: string, session: string, outputDir: string): Promise<void> {
-  const result = await aocClient
-    .url(`/${year}/day/${day}/input`)
+function getAocClient(session: string) {
+  return wretch('https://adventofcode.com')
     .options({ credentials: 'same-origin' })
     .headers({
       Cookie: `session=${session}`,
-    })
-    .get()
-    .text();
+    });
+}
+
+async function downloadAOCInput(year: string, day: string, session: string, outputDir: string): Promise<void> {
+  const result = await getAocClient(session).url(`/${year}/day/${day}/input`).get().text();
   const outputPath = path.join(outputDir, 'input.txt');
   return fs.writeFileSync(outputPath, result);
 }
@@ -31,15 +30,8 @@ export async function fetchCommand(year: string, day: string, session: string, o
 }
 
 export async function fetchTitle(year: string, day: string, session: string): Promise<string> {
-  const document = await aocClient
-    .url(`/${year}/day/${day}`)
-    .options({ credentials: 'same-origin' })
-    .headers({
-      Cookie: `session=${session}`,
-    })
-    .get()
-    .text();
-  console.log({ document });
+  const document = await getAocClient(session).url(`/${year}/day/${day}`).get().text();
+
   const titleRegex = /(---) (Day) (\d+): (.+) (---)/g;
   const fullTitle = document.match(titleRegex);
   if (!fullTitle) {
@@ -49,7 +41,7 @@ export async function fetchTitle(year: string, day: string, session: string): Pr
   return fullTitle[0].replaceAll('-', '').trim();
 }
 
-async function scaffoldAOCFolder(year: string, day: string, outputDir: string, title: string) {
+function scaffoldAOCFolder(year: string, day: string, outputDir: string, title: string): void {
   const README_TEMPLATE = `[${title}](https://adventofcode.com/${year}/day/${day} "${title}")
 
 \`\`\`shell
@@ -65,7 +57,7 @@ function part1(input: string[]) {}
 
 function part2(input: string[]) {}
 
-function go() {
+function go(): void {
   const input = parseInput('./input.txt');
 
   const res1 = part1(input);
@@ -81,7 +73,7 @@ go();
   fs.writeFileSync(taskPath, TASK_TEMPLATE);
 }
 
-export async function scaffoldCommand(year: string, day: string, session: string, output: string) {
+export async function scaffoldCommand(year: string, day: string, session: string, output: string): Promise<void> {
   try {
     console.log(`SCAFFOLDING AOC INPUT FOR YEAR ${year} DAY ${day}...`);
     const outputDir = output ?? path.join(process.cwd(), `day${day}`);
@@ -90,7 +82,7 @@ export async function scaffoldCommand(year: string, day: string, session: string
     await downloadAOCInput(year, day, session, outputDir);
 
     const title = await fetchTitle(year, day, session);
-    await scaffoldAOCFolder(year, day, outputDir, title);
+    scaffoldAOCFolder(year, day, outputDir, title);
     console.log(`AOC INPUT FOR YEAR ${year} DAY ${day} SCAFFOLDED SUCCESSFULLY!`);
   } catch (error) {
     console.error('ERROR SCAFFOLDING AOC INPUT: ', error);
