@@ -17,19 +17,16 @@ function isDecreasing(report: number[]): boolean {
   return JSON.stringify(report) === JSON.stringify(sortedList);
 }
 
-function isWithinDelta(a: number, b: number): boolean {
+function isWithinDelta(report: number[]): boolean {
   const MIN_DELTA = 1;
   const MAX_DELTA = 3;
-  const delta = Math.abs(a - b);
-  return MIN_DELTA <= delta && MAX_DELTA >= delta;
-}
 
-function reportWithinDelta(report: number[]): boolean {
   let wholeReportWithinDetlta = true;
   for (let index = 0; index < report.length - 1; index++) {
     const currentScore = report[index];
     const nextScore = report[index + 1];
-    wholeReportWithinDetlta = isWithinDelta(currentScore, nextScore);
+    const delta = Math.abs(currentScore - nextScore);
+    wholeReportWithinDetlta = MIN_DELTA <= delta && MAX_DELTA >= delta;
     if (!wholeReportWithinDetlta) {
       break;
     }
@@ -40,7 +37,7 @@ function reportWithinDelta(report: number[]): boolean {
 
 function isSafeReport(report: number[]): boolean {
   const isIncreasingOrDecreasing = isIncreasing(report) || isDecreasing(report);
-  const withinDelta = reportWithinDelta(report);
+  const withinDelta = isWithinDelta(report);
   return isIncreasingOrDecreasing && withinDelta;
 }
 
@@ -85,9 +82,8 @@ function part2(input: string[]): number {
     }
 
     const report = line.split(' ').map((score) => Number.parseInt(score, 10));
-    const isIncreasingOrDecreasing = isIncreasing(report) || isDecreasing(report);
-    const withinDelta = reportWithinDelta(report);
-    if (isIncreasingOrDecreasing && withinDelta) {
+    const safeReport = isSafeReport(report);
+    if (safeReport) {
       return accum + 1;
     }
 
