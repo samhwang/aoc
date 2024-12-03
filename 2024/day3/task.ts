@@ -8,7 +8,7 @@ type MulText = `mul(${number},${number})`;
 function calculateMul(mulText: MulText): number {
   const numbers = mulText.match(/(\d+)/g);
   if (!numbers) {
-    throw new Error(`Invalid multext input. input is ${mulText}`)
+    throw new Error(`Invalid multext input. input is ${mulText}`);
   }
 
   const product = numbers.reduce((accum, num) => accum * Number.parseInt(num, 10), 1);
@@ -17,10 +17,11 @@ function calculateMul(mulText: MulText): number {
 
 function part1(input: string[]): number {
   const mulGroupRegex = /(mul)\((\d{1,3})\,(\d{1,3})\)/g;
+
   const total = input.reduce((accum, line) => {
     const matches = line.match(mulGroupRegex);
     if (!matches) {
-      throw new Error(`Invalid line input. line is ${line}`)
+      throw new Error(`Invalid line input. line is ${line}`);
     }
 
     const instructions = matches as MulText[];
@@ -43,34 +44,35 @@ function part2(input: string[]) {
   const doDontMulRegex = /((mul)\((\d{1,3})\,(\d{1,3})\))|(do)\(\)|(don\'t)\(\)/g;
 
   let addToTotal = true;
-  let total = 0;
-  for (const line of input) {
+  const total = input.reduce((totalAccum, line): number => {
     const matches = line.match(doDontMulRegex);
     if (!matches) {
-      throw new Error(`Invalid line input. line is ${line}`)
+      throw new Error(`Invalid line input. line is ${line}`);
     }
 
     const instructions = matches as (MulText | DoText | DontText)[];
 
-    for (const instruction of instructions) {
+    const subtotal = instructions.reduce((subtotalAccum, instruction) => {
       if (instruction === 'do()') {
         addToTotal = true;
-        continue;
+        return subtotalAccum;
       }
 
       if (instruction === "don't()") {
         addToTotal = false;
-        continue;
+        return subtotalAccum;
       }
 
       if (!addToTotal) {
-        continue;
+        return subtotalAccum;
       }
 
-      const subtotal = calculateMul(instruction);
-      total += subtotal;
-    }
-  }
+      const product = calculateMul(instruction);
+      return subtotalAccum + product;
+    }, 0);
+
+    return totalAccum + subtotal;
+  }, 0);
 
   return total;
 }
