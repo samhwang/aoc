@@ -1,5 +1,9 @@
 import { parseInput } from '../src/parse-input';
 
+function parseReport(line: string): number[] {
+  return line.split(' ').map((score) => Number.parseInt(score, 10));
+}
+
 /**
  * part 1: Find all safe reports
  * Safe reports are:
@@ -21,18 +25,18 @@ function isWithinDelta(report: number[]): boolean {
   const MIN_DELTA = 1;
   const MAX_DELTA = 3;
 
-  let wholeReportWithinDetlta = true;
+  let withinDelta = true;
   for (let index = 0; index < report.length - 1; index++) {
     const currentScore = report[index];
     const nextScore = report[index + 1];
     const delta = Math.abs(currentScore - nextScore);
-    wholeReportWithinDetlta = MIN_DELTA <= delta && MAX_DELTA >= delta;
-    if (!wholeReportWithinDetlta) {
+    withinDelta = MIN_DELTA <= delta && MAX_DELTA >= delta;
+    if (!withinDelta) {
       break;
     }
   }
 
-  return wholeReportWithinDetlta;
+  return withinDelta;
 }
 
 function isSafeReport(report: number[]): boolean {
@@ -43,7 +47,8 @@ function isSafeReport(report: number[]): boolean {
 
 function part1(input: string[]): number {
   return input.reduce((accum, line) => {
-    const report = line.split(' ').map((score) => Number.parseInt(score, 10));
+    const report = parseReport(line);
+
     const safeReport = isSafeReport(report);
     if (safeReport) {
       return accum + 1;
@@ -59,21 +64,21 @@ function part1(input: string[]): number {
  */
 
 function isFixable(report: number[]): boolean {
-  const count = report.reduce((count, _score, index) => {
+  let fixable = false;
+  for (let index = 0; index < report.length; index++) {
     const reportWithoutElem = [...report.slice(0, index), ...report.slice(index + 1)];
-    const fixable = isSafeReport(reportWithoutElem);
-    if (!fixable) {
-      return count;
+    fixable = isSafeReport(reportWithoutElem)
+    if (fixable) {
+      break;
     }
-    return count + 1;
-  }, 0);
-
-  return count > 0;
+  }
+  return fixable;
 }
 
 function part2(input: string[]): number {
   return input.reduce((accum, line) => {
-    const report = line.split(' ').map((score) => Number.parseInt(score, 10));
+    const report = parseReport(line);
+
     const safeReport = isSafeReport(report);
     if (safeReport) {
       return accum + 1;
