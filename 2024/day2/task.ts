@@ -67,7 +67,7 @@ function isFixable(report: number[]): boolean {
   let fixable = false;
   for (let index = 0; index < report.length; index++) {
     const reportWithoutElem = [...report.slice(0, index), ...report.slice(index + 1)];
-    fixable = isSafeReport(reportWithoutElem)
+    fixable = isSafeReport(reportWithoutElem);
     if (fixable) {
       break;
     }
