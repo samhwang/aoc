@@ -83,7 +83,60 @@ function part1(input: string[]): number {
   return total;
 }
 
-function part2(input: string[]) {}
+/** p2: Count all the MAS words that form an X in the grid */
+function countMasWords([y, x]: Coordinates, grid: string[][]): number {
+  const WORD_TO_FIND = 'MAS';
+  const REVERSED_WORD_TO_FIND = 'SAM';
+  const LENGTH = WORD_TO_FIND.length - 1;
+  const MAX_X = grid.length - 1;
+  const MAX_Y = grid[0].length - 1;
+
+  const hasMasNW =
+    y >= LENGTH &&
+    x >= LENGTH &&
+    formWordOnGrid([y, x], 'NW', LENGTH, grid) === WORD_TO_FIND &&
+    [WORD_TO_FIND, REVERSED_WORD_TO_FIND].includes(formWordOnGrid([y - LENGTH, x], 'SW', LENGTH, grid));
+  const hasMasNE =
+    y >= LENGTH &&
+    x <= MAX_X - LENGTH &&
+    formWordOnGrid([y, x], 'NE', LENGTH, grid) === WORD_TO_FIND &&
+    [WORD_TO_FIND, REVERSED_WORD_TO_FIND].includes(formWordOnGrid([y - LENGTH, x], 'SE', LENGTH, grid));
+  const hasMasSW =
+    y <= MAX_Y - LENGTH &&
+    x >= LENGTH &&
+    formWordOnGrid([y, x], 'SW', LENGTH, grid) === WORD_TO_FIND &&
+    [WORD_TO_FIND, REVERSED_WORD_TO_FIND].includes(formWordOnGrid([y + LENGTH, x], 'NW', LENGTH, grid));
+  const hasMasSE =
+    y <= MAX_Y - LENGTH &&
+    x <= MAX_X - LENGTH &&
+    formWordOnGrid([y, x], 'SE', LENGTH, grid) === WORD_TO_FIND &&
+    [WORD_TO_FIND, REVERSED_WORD_TO_FIND].includes(formWordOnGrid([y + LENGTH, x], 'NE', LENGTH, grid));
+
+  const checks = [hasMasNW, hasMasNE, hasMasSW, hasMasSE];
+  const count = checks.reduce((count, check) => (check ? count + 1 : count), 0);
+
+  // Because we're basically searching for 2 instances of the `MAS` string, there will be duplicates.
+  // So divide this result by 2 will give us the final result.
+  return count / 2;
+}
+
+function part2(input: string[]) {
+  let total = 0;
+  const grid = parseIntoGrid(input);
+  for (let y = 0; y < grid.length; y++) {
+    for (let x = 0; x < grid[0].length; x++) {
+      const currentChar = grid[y][x];
+      if (currentChar !== 'M') {
+        continue;
+      }
+
+      const count = countMasWords([y, x], grid);
+      total += count;
+    }
+  }
+
+  return total;
+}
 
 function go(): void {
   const input = parseInput('./input.txt');
