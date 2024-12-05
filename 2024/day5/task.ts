@@ -55,13 +55,20 @@ function part1(input: string[]): number {
  * corrected lines.
  */
 function correctThePrint(print: number[], rules: Rule[]) {
-  let rulesToFollow = rules.filter(({ before, after }) => print.includes(before) || print.includes(after));
-  console.log({ rulesToFollow });
+  let rulesToFollow = rules.filter(({ before, after }) => print.includes(before) && print.includes(after));
   let printClone = [...print];
-  const result = [];
+  const result: number[] = [];
 
-  while (result.length < print.length) {
-
+  while (printClone.length > 0) {
+    for (let i = 0; i < printClone.length; i++) {
+      const currentNum = printClone[i]
+      const hasAfterRule = rulesToFollow.filter(({ after }) => after === currentNum)
+      if (hasAfterRule.length === 0) {
+        result.push(currentNum)
+        printClone = printClone.filter((num) => num !== currentNum)
+        rulesToFollow = rulesToFollow.filter(({ before }) => before !== currentNum)
+      }
+    }
   }
 
   return result;
