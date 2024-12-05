@@ -41,7 +41,7 @@ function part1(input: string[]): number {
         continue;
       }
       const middleIndex = Math.floor(print.length / 2);
-      const middleNum = print[middleIndex]
+      const middleNum = print[middleIndex];
       total += middleNum;
     }
   }
@@ -49,7 +49,53 @@ function part1(input: string[]): number {
   return total;
 }
 
-function part2(input: string[]) {}
+/**
+ * p2: For each incorrect order print that we found in p1, use the rules
+ * to put them in the correct order. Then add up only the middle value of the
+ * corrected lines.
+ */
+function correctThePrint(print: number[], rules: Rule[]) {
+  let rulesToFollow = rules.filter(({ before, after }) => print.includes(before) || print.includes(after));
+  console.log({ rulesToFollow });
+  let printClone = [...print];
+  const result = [];
+
+  while (result.length < print.length) {
+
+  }
+
+  return result;
+}
+
+function part2(input: string[]) {
+  let total = 0;
+  const rules: Rule[] = [];
+
+  for (const line of input) {
+    if (line.length === 0) {
+      continue;
+    }
+
+    if (line.includes('|')) {
+      const [before, after] = line.split('|').map((value) => Number.parseInt(value, 10));
+      rules.push({ before, after });
+    }
+
+    if (line.includes(',')) {
+      const print = line.split(',').map((value) => Number.parseInt(value, 10));
+      const isValid = lineInCorrectOrder(print, rules);
+      if (isValid) {
+        continue;
+      }
+      const correctPrint = correctThePrint(print, rules);
+      const middleIndex = Math.floor(correctPrint.length / 2);
+      const middleNum = correctPrint[middleIndex];
+      total += middleNum;
+    }
+  }
+
+  return total;
+}
 
 function go(): void {
   const input = parseInput('./input.txt');
