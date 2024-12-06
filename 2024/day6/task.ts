@@ -22,7 +22,10 @@ const FacingCoordinates: Record<Direction, Coordinates> = {
   S: [1, 0],
 };
 
-function parseMap(input: string[]): { obstacles: Coordinates[]; startPosition: Coordinates } {
+function parseMap(input: string[]): {
+  obstacles: Coordinates[];
+  startPosition: Coordinates;
+} {
   const obstacles: Coordinates[] = [];
   let startPosition: Coordinates = [0, 0];
 
@@ -70,7 +73,7 @@ function part1(input: string[]): number {
   const maxX = input[0].length;
   let isOutOfBounds = false;
   while (!isOutOfBounds) {
-    const hasCurrentCoords = visited.filter((coords) => JSON.stringify(coords) === JSON.stringify(currentCoordinates)).length > 0
+    const hasCurrentCoords = visited.filter((coords) => JSON.stringify(coords) === JSON.stringify(currentCoordinates)).length > 0;
     if (!hasCurrentCoords) {
       visited.push(currentCoordinates);
     }
@@ -89,7 +92,63 @@ function part1(input: string[]): number {
   return visited.length;
 }
 
-function part2(input: string[]) {}
+/**
+ * p2: Count how many places where we can put a single trap in to make the guard go in circles.
+ */
+function part2(input: string[]): number {
+  const { obstacles: startObstacles, startPosition } = parseMap(input);
+  const traps: Coordinates[] = [];
+  const maxY = input.length;
+  const maxX = input[0].length;
+
+  for (let y = 0; y < maxY; y++) {
+    for (let x = 0; x < maxX; x++) {
+      const trapCoordinates: Coordinates = [y, x];
+      const alreadyHasObstacle = startObstacles.filter((coords) => JSON.stringify(coords) === JSON.stringify(trapCoordinates)).length > 0;
+      if (alreadyHasObstacle) {
+        continue;
+      }
+
+      const isStartingPosition = JSON.stringify(startPosition) === JSON.stringify(trapCoordinates);
+      if (isStartingPosition) {
+        continue;
+      }
+
+      const obstacles: Coordinates[] = [...startObstacles, trapCoordinates];
+      const turnedAts: Coordinates[] = [];
+      let guardCoordinates: Coordinates = startPosition;
+      let currentDirection: Direction = 'N';
+      let isOutOfBounds = false;
+      while (!isOutOfBounds) {
+        const nextCoordinates = calculateNextCoordinates(guardCoordinates, currentDirection);
+        const hasObstacle = obstacles.filter((obs) => JSON.stringify(obs) === JSON.stringify(nextCoordinates)).length > 0;
+        if (!hasObstacle) {
+          guardCoordinates = nextCoordinates;
+          isOutOfBounds = outOfBounds(guardCoordinates, maxX, maxY);
+          continue;
+        }
+
+        currentDirection = TurnRight[currentDirection];
+        turnedAts.push(guardCoordinates);
+
+        const numTurns = turnedAts.length;
+        const notEnoughtPointsForLooping = numTurns < 4;
+        if (notEnoughtPointsForLooping) {
+          continue;
+        }
+
+        const lastTurn = turnedAts[numTurns - 1];
+        const stuckInCircle = turnedAts.filter((turn) => JSON.stringify(turn) === JSON.stringify(lastTurn)).length > 2;
+        if (stuckInCircle) {
+          traps.push(trapCoordinates);
+          break;
+        }
+      }
+    }
+  }
+
+  return traps.length;
+}
 
 function go(): void {
   const input = parseInput('./input.txt');
