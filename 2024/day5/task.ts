@@ -54,19 +54,19 @@ function part1(input: string[]): number {
  * to put them in the correct order. Then add up only the middle value of the
  * corrected lines.
  */
-function correctThePrint(print: number[], rules: Rule[]) {
-  let rulesToFollow = rules.filter(({ before, after }) => print.includes(before) && print.includes(after));
-  let printClone = [...print];
+function correctThePrint(originalPrint: number[], originalRules: Rule[]) {
+  let rules = originalRules.filter(({ before, after }) => originalPrint.includes(before) && originalPrint.includes(after));
+  let print = [...originalPrint];
   const result: number[] = [];
 
-  while (printClone.length > 0) {
-    for (let i = 0; i < printClone.length; i++) {
-      const currentNum = printClone[i]
-      const hasAfterRule = rulesToFollow.filter(({ after }) => after === currentNum)
+  while (print.length > 0) {
+    for (let i = 0; i < print.length; i++) {
+      const currentNum = print[i];
+      const hasAfterRule = rules.filter(({ after }) => after === currentNum);
       if (hasAfterRule.length === 0) {
-        result.push(currentNum)
-        printClone = printClone.filter((num) => num !== currentNum)
-        rulesToFollow = rulesToFollow.filter(({ before }) => before !== currentNum)
+        result.push(currentNum);
+        print = print.filter((num) => num !== currentNum);
+        rules = rules.filter(({ before }) => before !== currentNum);
       }
     }
   }
