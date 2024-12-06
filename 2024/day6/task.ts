@@ -7,6 +7,7 @@ type Y = number;
 type X = number;
 type Coordinates = [Y, X];
 type Direction = 'N' | 'S' | 'E' | 'W';
+type CoordinatesString = `${Y}|${X}`;
 
 const TurnRight: Record<Direction, Direction> = {
   N: 'E',
@@ -24,6 +25,7 @@ const FacingCoordinates: Record<Direction, Coordinates> = {
 
 type MapInfo = {
   obstacles: Coordinates[];
+  obstacleStrings: CoordinatesString[];
   startPosition: Coordinates;
   maxX: X;
   maxY: Y;
@@ -32,6 +34,7 @@ function parseMap(input: string[]): MapInfo {
   const maxY = input.length;
   const maxX = input[0].length;
   const obstacles: Coordinates[] = [];
+  const obstacleStrings: CoordinatesString[] = [];
   let startPosition: Coordinates = [0, 0];
 
   for (let y = 0; y < input.length; y++) {
@@ -43,6 +46,7 @@ function parseMap(input: string[]): MapInfo {
 
       if (input[y][x] === Obstacle) {
         obstacles.push([y, x]);
+        obstacleStrings.push(`${y}|${x}`);
         continue;
       }
 
@@ -55,6 +59,7 @@ function parseMap(input: string[]): MapInfo {
 
   return {
     obstacles,
+    obstacleStrings,
     startPosition,
     maxX,
     maxY,
@@ -64,54 +69,56 @@ function parseMap(input: string[]): MapInfo {
 /**
  * p1: Count how many distinct positions before the guard left the area
  */
+function areCoordinatesEqual([y1, x1]: Coordinates, [y2, x2]: Coordinates): boolean {
+  return y1 === y2 && x1 === x2
+}
+
+function calculateCoordinatesDistance([y1, x1]: Coordinates, [y2, x2]: Coordinates): number {
+  return Math.abs(y2 - y1) + Math.abs(x2 - x1)
+}
+
 function findObstacleAtDirection([y, x]: Coordinates, direction: Direction, obstacles: Coordinates[]): Coordinates | undefined {
-  const obstaclesInDirection = obstacles.filter((obs) => {
-    switch (direction) {
-      case 'N': {
-        return obs[0] < y && obs[1] === x;
-      }
+  const obstaclesInDirection = obstacles
+    .filter((obs) => {
+      switch (direction) {
+        case 'N': {
+          return obs[0] < y && obs[1] === x;
+        }
 
-      case 'S': {
-        return obs[0] > y && obs[1] === x;
-      }
+        case 'S': {
+          return obs[0] > y && obs[1] === x;
+        }
 
-      case 'E': {
-        return obs[0] === y && obs[1] > x;
-      }
+        case 'E': {
+          return obs[0] === y && obs[1] > x;
+        }
 
-      case 'W': {
-        return obs[0] === y && obs[1] < x;
+        case 'W': {
+          return obs[0] === y && obs[1] < x;
+        }
       }
-    }
-  });
+    })
+    .sort((a, b) => {
+      const distA = calculateCoordinatesDistance(a, [y,x]) - 1;
+      const distB = calculateCoordinatesDistance(b, [y,x]) - 1;
+      return distA - distB;
+    });
   if (obstaclesInDirection.length === 0) {
     return undefined;
   }
-
-  let nearest = obstaclesInDirection[0];
-  let nearestSteps = Math.abs(nearest[0] - y) + Math.abs(nearest[1] - x) - 1;
-  for (let i = 1; i < obstaclesInDirection.length; i++) {
-    const obstacle = obstaclesInDirection[i];
-    const steps = Math.abs(obstacle[0] - y) + Math.abs(obstacle[1] - x) - 1;
-    if (nearestSteps > steps) {
-      nearestSteps = steps;
-      nearest = obstacle;
-    }
-  }
-
-  return nearest;
+  return obstaclesInDirection[0];
 }
 
-function visitNodes(start: Coordinates, pathing: Coordinates, steps: number, existingNodes: Coordinates[]) {
+function visitNodes(start: Coordinates, pathing: Coordinates, steps: number, visited: Coordinates[]) {
   let currentCoordinates = start;
 
   for (let i = 1; i <= steps; i++) {
     currentCoordinates = [currentCoordinates[0] + pathing[0], currentCoordinates[1] + pathing[1]];
-    const alreadyHasCoords = existingNodes.find((coords) => coords[0] === currentCoordinates[0] && coords[1] === currentCoordinates[1]);
+    const alreadyHasCoords = visited.find((coords) => areCoordinatesEqual(coords, currentCoordinates));
     if (alreadyHasCoords) {
       continue;
     }
-    existingNodes.push(currentCoordinates);
+    visited.push(currentCoordinates);
   }
 }
 
@@ -121,14 +128,14 @@ function part1(mapInfo: MapInfo) {
   let currentCoordinates: Coordinates = startPosition;
   let currentDirection: Direction = 'N';
 
-  let isOutOfBounds = false;
-  while (!isOutOfBounds) {
+  let goOutOfBounds = false;
+  while (!goOutOfBounds) {
     const pathing = FacingCoordinates[currentDirection];
     let steps = 0;
 
     const nextObstacle = findObstacleAtDirection(currentCoordinates, currentDirection, obstacles);
     if (nextObstacle) {
-      steps = Math.abs(nextObstacle[0] - currentCoordinates[0]) + Math.abs(nextObstacle[1] - currentCoordinates[1]) - 1;
+      steps = calculateCoordinatesDistance(nextObstacle, currentCoordinates) - 1;
       currentDirection = TurnRight[currentDirection];
       visitNodes(currentCoordinates, pathing, steps, visited);
       currentCoordinates = visited[visited.length - 1];
@@ -155,7 +162,7 @@ function part1(mapInfo: MapInfo) {
     }
     visitNodes(currentCoordinates, pathing, steps, visited);
     currentCoordinates = visited[visited.length - 1];
-    isOutOfBounds = true;
+    goOutOfBounds = true;
   }
 
   return visited;
@@ -190,13 +197,13 @@ function part2(mapInfo: MapInfo, visited: Coordinates[]) {
       const newCoordinates: Coordinates = [nextObstacle[0] - pathing[0], nextObstacle[1] - pathing[1]];
       guardCoordinates = newCoordinates;
 
-      const stuckInPlace = newCoordinates[0] === oldCoordinates[0] && newCoordinates[1] === oldCoordinates[1];
+      const stuckInPlace = areCoordinatesEqual(newCoordinates, oldCoordinates);
       if (stuckInPlace) {
         currentDirection = TurnRight[currentDirection];
         continue;
       }
 
-      const stuckInCircle = turnedAts.filter((turn) => turn[0] === guardCoordinates[0] && turn[1] === guardCoordinates[1]).length > 0;
+      const stuckInCircle = turnedAts.filter((turn) => areCoordinatesEqual(turn, guardCoordinates)).length > 0;
       if (stuckInCircle) {
         traps.push(trapCoordinates);
         break;
