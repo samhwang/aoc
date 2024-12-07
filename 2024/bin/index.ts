@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { fetchCommand, scaffoldCommand } from '../src/get-aoc-input/command';
+import { fetchCommand } from '../src/get-aoc-input/fetch';
+import { scaffoldCommand } from '../src/get-aoc-input/scaffold';
 
 const program = new Command();
 

@@ -1,45 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import wretch from 'wretch';
 
-function getAocClient(session: string) {
-  return wretch('https://adventofcode.com')
-    .options({ credentials: 'same-origin' })
-    .headers({
-      Cookie: `session=${session}`,
-    });
-}
-
-async function downloadAOCInput(year: string, day: string, session: string, outputDir: string): Promise<void> {
-  const result = await getAocClient(session).url(`/${year}/day/${day}/input`).get().text();
-  const outputPath = path.join(outputDir, 'input.txt');
-  return fs.writeFileSync(outputPath, result);
-}
-
-export async function fetchCommand(year: string, day: string, session: string, output: string) {
-  try {
-    console.log(`RETRIEVING AOC INPUT FOR YEAR ${year} DAY ${day}...`);
-    const outputDir = output ?? path.join(process.cwd(), `day${day}`);
-    fs.mkdirSync(outputDir);
-
-    await downloadAOCInput(year, day, session, outputDir);
-    console.log(`AOC INPUT FOR YEAR ${year} DAY ${day} RETRIEVED SUCCESSFULLY!`);
-  } catch (error) {
-    console.error('ERROR RETRIEVING AOC INPUT: ', error);
-  }
-}
-
-export async function fetchTitle(year: string, day: string, session: string): Promise<string> {
-  const document = await getAocClient(session).url(`/${year}/day/${day}`).get().text();
-
-  const titleRegex = /(---) (Day) (\d+): (.+) (---)/g;
-  const fullTitle = document.match(titleRegex);
-  if (!fullTitle) {
-    return `Day ${day}: unknown title`;
-  }
-
-  return fullTitle[0].replaceAll('-', '').trim();
-}
+import { downloadAOCInput, fetchTitle } from './aoc-client';
 
 function scaffoldAOCFolder(year: string, day: string, outputDir: string, title: string): void {
   const README_TEMPLATE = `[${title}](https://adventofcode.com/${year}/day/${day} "${title}")
