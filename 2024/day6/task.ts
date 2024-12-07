@@ -218,14 +218,24 @@ function part2(mapInfo: MapInfo, visited: Coordinates[]) {
 }
 
 function go(): void {
+  console.time('task');
+
+  console.time('parse-input');
   const input = parseInput('./input.txt');
   const mapInfo = parseMap(input);
+  console.timeEnd('parse-input');
 
+  console.time('part 1');
   const visited = part1(mapInfo);
   console.log('PART 1: ', visited.length + 1);
+  console.timeEnd('part 1');
 
+  console.time('part 2');
   const res2 = part2(mapInfo, visited);
   console.log('PART 2: ', res2);
+  console.timeEnd('part 2');
+
+  console.timeEnd('task');
 }
 
 go();
