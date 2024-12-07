@@ -70,11 +70,11 @@ function parseMap(input: string[]): MapInfo {
  * p1: Count how many distinct positions before the guard left the area
  */
 function areCoordinatesEqual([y1, x1]: Coordinates, [y2, x2]: Coordinates): boolean {
-  return y1 === y2 && x1 === x2
+  return y1 === y2 && x1 === x2;
 }
 
 function calculateCoordinatesDistance([y1, x1]: Coordinates, [y2, x2]: Coordinates): number {
-  return Math.abs(y2 - y1) + Math.abs(x2 - x1)
+  return Math.abs(y2 - y1) + Math.abs(x2 - x1);
 }
 
 function findObstacleAtDirection([y, x]: Coordinates, direction: Direction, obstacles: Coordinates[]): Coordinates | undefined {
@@ -99,8 +99,8 @@ function findObstacleAtDirection([y, x]: Coordinates, direction: Direction, obst
       }
     })
     .sort((a, b) => {
-      const distA = calculateCoordinatesDistance(a, [y,x]) - 1;
-      const distB = calculateCoordinatesDistance(b, [y,x]) - 1;
+      const distA = calculateCoordinatesDistance(a, [y, x]) - 1;
+      const distB = calculateCoordinatesDistance(b, [y, x]) - 1;
       return distA - distB;
     });
   if (obstaclesInDirection.length === 0) {
