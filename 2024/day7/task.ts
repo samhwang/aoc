@@ -1,5 +1,8 @@
 import { parseInput } from '../src/parse-input';
 
+function joinNumbers(a: number, b: number): number {
+  return Number.parseInt(`${a}${b}`, 10);
+}
 
 type Equation = {
   result: number;
@@ -30,7 +33,7 @@ function checkIfAddUp1({ result, operands }: Equation): boolean {
   const maxOperationLimit = OPERATORS.length ** operatorCount;
 
   while (!doesAddUp && scenarioId <= maxOperationLimit) {
-    const operations = scenarioId.toString(2).padStart(operatorCount, '0');
+    const operations = scenarioId.toString(OPERATORS.length).padStart(operatorCount, '0');
     const subtotal = operands.reduce((accumulator, num, index) => {
       if (index === 0) {
         return num;
@@ -66,7 +69,53 @@ function part1(input: string[]): number {
   return totalSum;
 }
 
-function part2(input: string[]) {}
+function checkIfAddUp2({ result, operands }: Equation): boolean {
+  let doesAddUp = false;
+  let scenarioId = 0;
+  const operandsCount = operands.length;
+  const operatorCount = operandsCount - 1;
+  const OPERATORS = ['+', '*', '||'] as const;
+  const maxOperationLimit = OPERATORS.length ** operatorCount;
+
+  while (!doesAddUp && scenarioId <= maxOperationLimit) {
+    const operations = scenarioId.toString(OPERATORS.length).padStart(operatorCount, '0');
+    const subtotal = operands.reduce((accumulator, num, index) => {
+      if (index === 0) {
+        return num;
+      }
+
+      const operationString = operations.slice(index - 1, index);
+      const operationNum = Number.parseInt(operationString, 10) as 0 | 1 | 2;
+      const operator = OPERATORS[operationNum];
+      switch (operator) {
+        case '*':
+          return accumulator * num;
+
+        case '+':
+          return accumulator + num;
+
+        case '||':
+          return joinNumbers(accumulator, num);
+      }
+    }, 0);
+    doesAddUp = subtotal === result;
+    scenarioId += 1;
+  }
+
+  return doesAddUp;
+}
+
+function part2(input: string[]): number {
+  let totalSum = 0;
+  for (const line of input) {
+    const equation = parseIntoEquation(line);
+    const correct = checkIfAddUp2(equation);
+    if (correct) {
+      totalSum += equation.result;
+    }
+  }
+  return totalSum;
+}
 
 function go(): void {
   const input = parseInput('./input.txt');
