@@ -41,10 +41,6 @@ function areCoordinatesEqual([y1, x1]: Coordinates, [y2, x2]: Coordinates): bool
   return y1 === y2 && x1 === x2;
 }
 
-function calculateCoordinatesDistance([y1, x1]: Coordinates, [y2, x2]: Coordinates): number {
-  return Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
-}
-
 function addAntinodes(antinodes: Coordinates[], [y, x]: Coordinates, maxX: X, maxY: Y): Coordinates[] {
   const outBoundX = x < 0 || x > maxX;
   const outBoundY = y < 0 || y > maxY;
@@ -62,6 +58,10 @@ function addAntinodes(antinodes: Coordinates[], [y, x]: Coordinates, maxX: X, ma
   return antinodes;
 }
 
+function getNextNodeInlineSameDistance(node1: Coordinates, node2: Coordinates, step: number): Coordinates {
+  return [(step + 1) * node1[0] - step * node2[0], (step + 1) * node1[1] - step * node2[1]];
+}
+
 function part1(input: string[]) {
   const map = parseMap(input);
   const { maxX, maxY, antennas } = map;
@@ -72,16 +72,37 @@ function part1(input: string[]) {
       const startAntenna = antennasList[0];
       for (let i = 1; i < antennasList.length; i++) {
         const endAntenna = antennasList[i];
-        const distance = calculateCoordinatesDistance(startAntenna, endAntenna);
+        const node1: Coordinates = getNextNodeInlineSameDistance(startAntenna, endAntenna, 1);
+        addAntinodes(antinodes, node1, maxX, maxY);
+        const node2: Coordinates = getNextNodeInlineSameDistance(endAntenna, startAntenna, 1);
+        addAntinodes(antinodes, node2, maxX, maxY);
+      }
+      antennasList.shift();
+    }
+  }
+
+  return antinodes.length;
+}
+
+function areNodesInline(node1: Coordinates, node2: Coordinates, node3: Coordinates): boolean {
+  return (node1[0] - node2[0]) * (node3[1] - node2[1]) === (node1[1] - node2[1]) * (node3[0] - node2[0]);
+}
+
+function part2(input: string[]) {
+  const map = parseMap(input);
+  const { maxX, maxY, antennas } = map;
+  const antinodes: Coordinates[] = Object.values(antennas).flat();
+
+  for (const antennasList of Object.values(antennas)) {
+    while (antennasList.length > 0) {
+      const startAntenna = antennasList[0];
+      for (let i = 1; i < antennasList.length; i++) {
+        const endAntenna = antennasList[i];
         for (let y = 0; y <= maxY; y++) {
           for (let x = 0; x <= maxX; x++) {
             const node: Coordinates = [y, x];
-            const distanceToStart = calculateCoordinatesDistance(node, startAntenna);
-            const distanceToEnd = calculateCoordinatesDistance(node, endAntenna);
-
-            const isValidAntinode =
-              (distanceToStart === distance && distanceToEnd === 2 * distance) || (distanceToEnd === distance && distanceToStart === 2 * distance);
-            if (isValidAntinode) {
+            const isInline = areNodesInline(startAntenna, endAntenna, node);
+            if (isInline) {
               addAntinodes(antinodes, node, maxX, maxY);
             }
           }
@@ -93,8 +114,6 @@ function part1(input: string[]) {
 
   return antinodes.length;
 }
-
-function part2(mao: Map) {}
 
 function go(): void {
   console.time('task');
