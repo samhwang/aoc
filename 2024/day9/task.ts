@@ -86,7 +86,75 @@ function part1(input: string) {
   return checkSum;
 }
 
-function part2(input: string) {}
+/**
+ * p2: move the memory blocks to the left, 1 program at a time. The program can only be moved
+ * if there are enough spaces.
+ */
+
+function findFileBlocksFromId(disk: Disk, id: number) {
+  const indices: number[] = []
+  for (let i = 0; i < disk.length; i++) {
+    if (disk[i] !== id) {
+      continue;
+    }
+
+    indices.push(i)
+  }
+
+  return indices
+}
+
+function findFirstAvailableSpaceBlock(disk: Disk, size: number) {
+  let indices: number[] = []
+  for (let i = 0; i < disk.length; i++) {
+    if (indices.length === 0 && disk[i] !== null) {
+      continue;
+    }
+
+    if (disk[i] !== null) {
+      indices = [];
+      continue;
+    }
+
+    indices.push(i);
+    if (indices.length >= size) {
+      break;
+    }
+  }
+
+  return indices;
+}
+
+function part2(input: string) {
+  const disk = parseDisk(input);
+  let fileId = Number.MAX_SAFE_INTEGER
+
+  for (let i = disk.length - 1; i >= 0; i--) {
+    if (disk[i] === null) {
+      continue;
+    }
+
+    fileId = disk[i] as number;
+    break;
+  }
+
+  while (fileId > 0) {
+    const fileBlocks = findFileBlocksFromId(disk, fileId);
+    const spaces = findFirstAvailableSpaceBlock(disk, fileBlocks.length);
+    if (fileBlocks[0] < spaces[0]) {
+      fileId -= 1;
+      continue;
+    }
+    for (let space = 0; space < fileBlocks.length; space++) {
+      disk[fileBlocks[space]] = null
+      disk[spaces[space]] = fileId
+    }
+    fileId -= 1;
+  }
+
+  const checkSum = calculateChecksum(disk)
+  return checkSum
+}
 
 function go(): void {
   console.time('task');
