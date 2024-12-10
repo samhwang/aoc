@@ -1,27 +1,6 @@
 import { parseInput } from '../src/parse-input';
 
 type Disk = (number | null)[];
-function parseDisk(input: string): Disk {
-  const disk: (number | null)[] = [];
-  let fileBlockId = 0;
-
-  for (let i = 0; i < input.length; i++) {
-    const blockCount = Number.parseInt(input[i], 10);
-    if (i % 2 === 0) {
-      for (let j = 0; j < blockCount; j++) {
-        disk.push(fileBlockId);
-      }
-      fileBlockId++;
-      continue;
-    }
-
-    for (let j = 0; j < blockCount; j++) {
-      disk.push(null);
-    }
-  }
-
-  return disk;
-}
 
 function calculateChecksum(disk: Disk): number {
   let total = 0;
@@ -35,80 +14,57 @@ function calculateChecksum(disk: Disk): number {
   return total;
 }
 
-/**
- * p1: move the memory blocks to the left, 1 block at a time
- */
+type FileBlockMeta = {
+  size: number;
+  firstIndex: number;
+};
+type Disk2 = {
+  disk: Disk;
+  fileBlocks: Record<number, FileBlockMeta>;
+};
+function parseDisk(input: string): Disk2 {
+  const disk: (number | null)[] = [];
+  let fileBlockId = 0;
+  const fileBlocks: Record<number, FileBlockMeta> = {};
 
-function findLastNumber(disk: Disk): number {
-  let index = 0;
-  for (let i = disk.length - 1; i >= 0; i--) {
-    const num = disk[i];
-    const isNumber = num !== null;
-    if (!isNumber) {
+  for (let i = 0; i < input.length; i++) {
+    const blockCount = Number.parseInt(input[i], 10);
+    if (i % 2 === 0) {
+      for (let j = 0; j < blockCount; j++) {
+        disk.push(fileBlockId);
+        if (!fileBlocks[fileBlockId]) {
+          fileBlocks[fileBlockId] = {
+            size: 0,
+            firstIndex: disk.length - 1,
+          };
+        }
+        fileBlocks[fileBlockId].size += 1;
+      }
+      fileBlockId++;
       continue;
     }
 
-    index = i;
-    break;
-  }
-
-  return index;
-}
-
-function findFirstBlank(disk: Disk): number {
-  let index = 0;
-  for (let i = 0; i < disk.length; i++) {
-    const char = disk[i];
-    const isBlank = char === null;
-    if (!isBlank) {
-      continue;
+    for (let j = 0; j < blockCount; j++) {
+      disk.push(null);
     }
-
-    index = i;
-    break;
   }
 
-  return index;
+  return {
+    disk,
+    fileBlocks,
+  };
 }
 
-function part1(input: string) {
-  const disk = parseDisk(input);
-  let firstBlankIndex = findFirstBlank(disk);
-  let lastNumIndex = findLastNumber(disk);
-  while (firstBlankIndex < lastNumIndex) {
-    disk[firstBlankIndex] = disk[lastNumIndex];
-    disk[lastNumIndex] = null;
-    firstBlankIndex = findFirstBlank(disk);
-    lastNumIndex = findLastNumber(disk);
-  }
-
-  const checkSum = calculateChecksum(disk);
-  return checkSum;
-}
-
-/**
- * p2: move the memory blocks to the left, 1 program at a time. The program can only be moved
- * if there are enough spaces.
- */
-
-function findFileBlocksFromId(disk: Disk, id: number) {
-  const indices: number[] = []
-  for (let i = 0; i < disk.length; i++) {
-    if (disk[i] !== id) {
-      continue;
-    }
-
-    indices.push(i)
-  }
-
-  return indices
-}
-
-function findFirstAvailableSpaceBlock(disk: Disk, size: number) {
-  let indices: number[] = []
+function findFirstAvailableSpaceBlock(disk: Disk, size: number, firstIndex: number) {
+  let indices: number[] = [];
   for (let i = 0; i < disk.length; i++) {
     if (indices.length === 0 && disk[i] !== null) {
       continue;
+    }
+
+    if (i >= firstIndex) {
+      indices = [];
+      break;
     }
 
     if (disk[i] !== null) {
@@ -125,35 +81,47 @@ function findFirstAvailableSpaceBlock(disk: Disk, size: number) {
   return indices;
 }
 
+/**
+ * p1: move the memory blocks to the left, 1 block at a time
+ */
+function part1(input: string) {
+  const { disk, fileBlocks } = parseDisk(input);
+
+  for (let [fileId, { size, firstIndex }] of Object.entries(fileBlocks).reverse()) {
+    for (let i = firstIndex + size - 1; i >= firstIndex; i--) {
+      const spaces = findFirstAvailableSpaceBlock(disk, 1, i)
+      if (spaces.length === 0) {
+        continue;
+      }
+      disk[spaces[0]] = Number.parseInt(fileId, 10);
+      disk[i] = null
+    }
+  }
+
+  const checkSum = calculateChecksum(disk);
+  return checkSum;
+}
+
+/**
+ * p2: move the memory blocks to the left, 1 program at a time. The program can only be moved
+ * if there are enough spaces.
+ */
 function part2(input: string) {
-  const disk = parseDisk(input);
-  let fileId = Number.MAX_SAFE_INTEGER
+  const { disk, fileBlocks } = parseDisk(input);
 
-  for (let i = disk.length - 1; i >= 0; i--) {
-    if (disk[i] === null) {
+  for (const [fileId, { size, firstIndex }] of Object.entries(fileBlocks).reverse()) {
+    const spaces = findFirstAvailableSpaceBlock(disk, size, firstIndex);
+    if (spaces.length === 0) {
       continue;
     }
-
-    fileId = disk[i] as number;
-    break;
+    for (let space = 0; space < size; space++) {
+      disk[spaces[space]] = Number.parseInt(fileId, 10);
+      disk[firstIndex + space] = null
+    }
   }
 
-  while (fileId > 0) {
-    const fileBlocks = findFileBlocksFromId(disk, fileId);
-    const spaces = findFirstAvailableSpaceBlock(disk, fileBlocks.length);
-    if (fileBlocks[0] < spaces[0]) {
-      fileId -= 1;
-      continue;
-    }
-    for (let space = 0; space < fileBlocks.length; space++) {
-      disk[fileBlocks[space]] = null
-      disk[spaces[space]] = fileId
-    }
-    fileId -= 1;
-  }
-
-  const checkSum = calculateChecksum(disk)
-  return checkSum
+  const checkSum = calculateChecksum(disk);
+  return checkSum;
 }
 
 function go(): void {
