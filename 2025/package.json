@@ -1,0 +1,28 @@
+{
+  "name": "@samhwang/aoc-template",
+  "version": "1.0.0",
+  "description": "Advent of Code Template Node",
+  "engines": {
+    "node": "^22.0.0",
+    "pnpm": "^10.0.0"
+  },
+  "packageManager": "pnpm@10.24.0",
+  "type": "module",
+  "scripts": {
+    "get-aoc-input": "tsx bin/index.ts",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "lint:fix:unsafe": "biome check --write --unsafe .",
+    "format": "biome format --write .",
+    "ci": "biome ci ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.8",
+    "@types/node": "^22.19.1",
+    "commander": "^14.0.2",
+    "esbuild": "^0.27.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "wretch": "^3.0.5"
+  }
+}
