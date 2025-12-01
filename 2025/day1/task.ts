@@ -1,8 +1,65 @@
 import { parseInput } from '../src/parse-input';
 
-function part1(input: string[]) {}
+function parseInstruction(instruction: string): { direction: 'L' | 'R'; steps: number } {
+  const matches = instruction.match(/([LR])(\d+)/);
+  if (!matches) throw new Error(`Invalid instruction: ${instruction}`);
+  const direction = matches[1] as 'L' | 'R';
+  const steps = parseInt(matches[2], 10);
+  return { direction, steps };
+}
 
-function part2(input: string[]) {}
+function part1(input: string[]) {
+  const instructions = input.map(parseInstruction);
+
+  const START = 50;
+  const MIN = 0;
+  const MAX = 99;
+  let currentNumber = START;
+  let stopsAt0 = 0;
+
+  instructions.forEach(({ direction, steps }) => {
+    for (let count = 0; count < steps; count++) {
+      const move = direction === 'L' ? -1 : 1;
+      currentNumber += move;
+      if (currentNumber < MIN) {
+        currentNumber = MAX;
+      } else if (currentNumber > MAX) {
+        currentNumber = MIN;
+      }
+    }
+
+    if (currentNumber === 0) {
+      stopsAt0++;
+    }
+  });
+  return stopsAt0;
+}
+
+function part2(input: string[]) {
+  const instructions = input.map(parseInstruction);
+
+  const START = 50;
+  const MIN = 0;
+  const MAX = 99;
+  let currentNumber = START;
+  let stopsAt0 = 0;
+
+  instructions.forEach(({ direction, steps }) => {
+    for (let count = 0; count < steps; count++) {
+      const move = direction === 'L' ? -1 : 1;
+      currentNumber += move;
+      if (currentNumber < MIN) {
+        currentNumber = MAX;
+      } else if (currentNumber > MAX) {
+        currentNumber = MIN;
+      }
+      if (currentNumber === 0) {
+        stopsAt0++;
+      }
+    }
+  });
+  return stopsAt0;
+}
 
 function go(): void {
   console.time('task');
