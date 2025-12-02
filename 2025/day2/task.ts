@@ -8,29 +8,11 @@ function parseRange(input: string): Range[] {
   });
 }
 
-function part1(ranges: Range[]) {
+function solve(ranges: Range[], matcher: RegExp) {
   let total = 0;
   ranges.forEach(([start, end]) => {
     for (let num = start; num <= end; num++) {
-      const numAsString = num.toString();
-      if (numAsString.length % 2 !== 0) {
-        continue;
-      }
-      const part1 = numAsString.slice(0, numAsString.length / 2);
-      const part2 = numAsString.slice(numAsString.length / 2);
-      if (part1 === part2) {
-        total += num;
-      }
-    }
-  });
-  return total;
-}
-
-function part2(ranges: Range[]) {
-  let total = 0;
-  ranges.forEach(([start, end]) => {
-    for (let num = start; num <= end; num++) {
-      const match = num.toString().match(/^(\d+?)\1+$/);
+      const match = num.toString().match(matcher);
       if (!match) {
         continue;
       }
@@ -39,6 +21,16 @@ function part2(ranges: Range[]) {
     }
   });
   return total;
+}
+
+function part1(ranges: Range[]) {
+  const regex = /^(\d+)\1$/;
+  return solve(ranges, regex);
+}
+
+function part2(ranges: Range[]) {
+  const regex = /^(\d+?)\1+$/
+  return solve(ranges, regex);
 }
 
 function go(): void {
