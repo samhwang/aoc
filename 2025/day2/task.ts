@@ -1,9 +1,14 @@
 import { parseInput } from '../src/parse-input';
 
-function part1(input: string) {
-  const ranges = input.split(',').map((range) => {
+type Range = [number, number];
+
+function parseRange(input: string): Range[] {
+  return input.split(',').map((range) => {
     return range.split('-').map((val) => Number.parseInt(val, 10)) as [number, number];
   });
+}
+
+function part1(ranges: Range[]) {
   let total = 0;
   ranges.forEach(([start, end]) => {
     for (let num = start; num <= end; num++) {
@@ -21,17 +26,19 @@ function part1(input: string) {
   return total
 }
 
-function part2(input: string[]) {}
+function part2(ranges: Range[]) {
+}
 
 function go(): void {
   console.time('task');
 
   console.time('parse-input');
   const input = parseInput('./input.txt');
+  const ranges = parseRange(input[0]);
   console.timeEnd('parse-input');
 
   console.time('part 1');
-  const res1 = part1(input[0]);
+  const res1 = part1(ranges);
   console.log('PART 1: ', res1);
   console.timeEnd('part 1');
 
