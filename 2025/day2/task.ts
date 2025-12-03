@@ -24,11 +24,16 @@ function solve(ranges: Range[], matcher: RegExp) {
 }
 
 function part1(ranges: Range[]) {
+  // Regex matches number that are just duplication of the same number twice.
+  // e.g. 123123 is 123 2 times, 1212 is 12 2 times,...
+  // but does not match 101, 12312, 123123123, 111111111...
   const regex = /^(\d+)\1$/;
   return solve(ranges, regex);
 }
 
 function part2(ranges: Range[]) {
+  // Regex matches number that has duplication in it at least twice.
+  // e.g. same as above, but will now also match 1123123123 because its 123 3 times, 111111111 because its 1 9 times...
   const regex = /^(\d+?)\1+$/;
   return solve(ranges, regex);
 }
