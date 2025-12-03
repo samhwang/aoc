@@ -1,6 +1,18 @@
 import { parseInput } from '../src/parse-input';
 
-function part1(input: string[]) {}
+function part1(input: string[]) {
+  return input.reduce((totalJoltage, line) => {
+    const batteries = line.split('');
+    let largestJoltage = 0;
+    for (let a = 0; a < batteries.length; a++) {
+      for (let b = a + 1; b < batteries.length; b++) {
+        const number = Number.parseInt(`${batteries[a]}${batteries[b]}`, 10);
+        largestJoltage = Math.max(largestJoltage, number);
+      }
+    }
+    return totalJoltage + largestJoltage;
+  }, 0)
+}
 
 function part2(input: string[]) {}
 
