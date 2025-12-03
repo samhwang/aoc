@@ -29,7 +29,7 @@ function part1(ranges: Range[]) {
 }
 
 function part2(ranges: Range[]) {
-  const regex = /^(\d+?)\1+$/
+  const regex = /^(\d+?)\1+$/;
   return solve(ranges, regex);
 }
 
