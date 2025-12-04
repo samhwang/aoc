@@ -23,25 +23,7 @@ function countAdjacentRolls(map: string[][], x: number, y: number) {
   return adjacentTiles.filter((tile) => tile === PAPER).length;
 }
 
-function part1(input: string[]) {
-  const map = buildMap(input);
-  let acc = 0;
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[y].length; x++) {
-      if (map[y][x] !== PAPER) {
-        continue;
-      }
-
-      const count = countAdjacentRolls(map, x, y);
-      if (count < MAX_ADJACENT_PAPER ) {
-        acc++;
-      }
-    }
-  }
-  return acc;
-}
-
-function part2(input: string[]) {
+function solve(input: string[], runOnce: boolean) {
   const map = buildMap(input);
   let acc = 0;
   let runAcc = 0;
@@ -63,11 +45,22 @@ function part2(input: string[]) {
     }
 
     acc += runAcc;
+    if (runOnce) {
+      break;
+    }
     toRemove.forEach(([y, x]) => {
       map[y][x] = NOT_PAPER;
     });
   } while (runAcc > 0);
   return acc;
+}
+
+function part1(input: string[]) {
+  return solve(input, true);
+}
+
+function part2(input: string[]) {
+  return solve(input, false);
 }
 
 function go(): void {
