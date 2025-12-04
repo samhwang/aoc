@@ -1,6 +1,7 @@
 import { parseInput } from '../src/parse-input';
 
 const PAPER = '@';
+const NOT_PAPER = '.';
 const MAX_ADJACENT_PAPER = 4;
 
 function buildMap(input: string[]): string[][] {
@@ -40,7 +41,34 @@ function part1(input: string[]) {
   return acc;
 }
 
-function part2(input: string[]) {}
+function part2(input: string[]) {
+  const map = buildMap(input);
+  let acc = 0;
+  let runAcc = 0;
+  do {
+    runAcc = 0;
+    const toRemove: [number, number][] = [];
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 0; x < map[y].length; x++) {
+        if (map[y][x] !== PAPER) {
+          continue;
+        }
+
+        const count = countAdjacentRolls(map, x, y);
+        if (count < MAX_ADJACENT_PAPER) {
+          toRemove.push([y, x]);
+          runAcc++;
+        }
+      }
+    }
+
+    acc += runAcc;
+    toRemove.forEach(([y, x]) => {
+      map[y][x] = NOT_PAPER;
+    });
+  } while (runAcc > 0);
+  return acc;
+}
 
 function go(): void {
   console.time('task');
