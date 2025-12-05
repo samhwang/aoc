@@ -1,7 +1,9 @@
 import { parseInput } from '../src/parse-input';
 
+type Range = [number, number];
+
 function buildRange(input: string[]) {
-  const freshRanges: [number, number][] = [];
+  const freshRanges: Range[] = [];
   const ingredients: number[] = [];
 
   input.forEach((line) => {
@@ -10,7 +12,7 @@ function buildRange(input: string[]) {
     }
 
     if (line.includes('-')) {
-      const [start, end] = line.split('-').map((num) => Number.parseInt(num, 10)) as [number, number];
+      const [start, end] = line.split('-').map((num) => Number.parseInt(num, 10)) as Range;
       freshRanges.push([start, end]);
       return;
     }
@@ -30,7 +32,35 @@ function part1(input: string[]) {
   }).length;
 }
 
-function part2(input: string[]) {}
+function checkOverlappingRanges([start1, end1]: Range, [start2, end2]: Range): boolean {
+  return start1 <= end2 && start2 <= end1;
+}
+
+function part2(input: string[]) {
+  const { freshRanges } = buildRange(input);
+  const finalRanges = freshRanges
+    .sort(([start1], [start2]) => {
+      return start1 - start2;
+    })
+    .reduce((accumulator, currentRange) => {
+      if (accumulator.length === 0) {
+        accumulator.push(currentRange);
+      }
+
+      const previousRange = accumulator[accumulator.length - 1];
+      if (checkOverlappingRanges(previousRange, currentRange)) {
+        accumulator[accumulator.length - 1] = [Math.min(previousRange[0], currentRange[0]), Math.max(previousRange[1], currentRange[1])];
+      } else {
+        accumulator.push(currentRange);
+      }
+      return accumulator;
+    }, [] as Range[])
+    .reduce((accumulator, [start, end]) => {
+      const numInRange = end - start + 1;
+      return accumulator + numInRange;
+    }, 0);
+  return finalRanges;
+}
 
 function go(): void {
   console.time('task');
