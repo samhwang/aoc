@@ -16,15 +16,14 @@ function part1(input: string[]) {
       if (beamPositions.includes(splitterIndex)) {
         beamPositions = beamPositions.filter((pos) => pos !== splitterIndex);
         if (splitterIndex > 0) {
-          beamPositions.push(splitterIndex + 1);
+          beamPositions.push(splitterIndex - 1);
         }
         if (splitterIndex < line.length - 1) {
-          beamPositions.push(splitterIndex - 1);
+          beamPositions.push(splitterIndex + 1);
         }
         splitCount++;
       }
     }
-    beamPositions = [...new Set(beamPositions.sort((a, b) => a - b))];
   });
   return splitCount;
 }
@@ -58,21 +57,21 @@ function part2(input: string[]) {
           throw new Error(`Value not found for index ${splitterIndex}. THERE MUST BE A VALUE HERE!!!`);
         }
         if (splitterIndex > 0) {
-          beamPositions.push(splitterIndex + 1);
-          const rightValue = pathValue.get(splitterIndex + 1);
-          if (!rightValue) {
-            pathValue.set(splitterIndex + 1, currentValue);
-          } else {
-            pathValue.set(splitterIndex + 1, rightValue + currentValue);
-          }
-        }
-        if (splitterIndex < line.length - 1) {
           beamPositions.push(splitterIndex - 1);
           const leftValue = pathValue.get(splitterIndex - 1);
           if (!leftValue) {
             pathValue.set(splitterIndex - 1, currentValue);
           } else {
             pathValue.set(splitterIndex - 1, leftValue + currentValue);
+          }
+        }
+        if (splitterIndex < line.length - 1) {
+          beamPositions.push(splitterIndex + 1);
+          const rightValue = pathValue.get(splitterIndex + 1);
+          if (!rightValue) {
+            pathValue.set(splitterIndex + 1, currentValue);
+          } else {
+            pathValue.set(splitterIndex + 1, rightValue + currentValue);
           }
         }
         pathValue.delete(splitterIndex);
