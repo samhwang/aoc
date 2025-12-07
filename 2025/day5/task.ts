@@ -55,11 +55,10 @@ function part1(freshRanges: Range[], ingredients: number[]) {
 }
 
 function part2(freshRanges: Range[]) {
-  const finalRanges = freshRanges.reduce((accumulator, [start, end]) => {
+  return freshRanges.reduce((accumulator, [start, end]) => {
     const numInRange = end - start + 1;
     return accumulator + numInRange;
   }, 0);
-  return finalRanges;
 }
 
 function go(): void {
