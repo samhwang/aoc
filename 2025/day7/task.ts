@@ -1,6 +1,33 @@
 import { parseInput } from '../src/parse-input';
 
-function part1(input: string[]) {}
+function part1(input: string[]) {
+  const [startLine, ...nextLines] = input;
+  const start = startLine.indexOf('S');
+  let beamPositions = [start];
+  let splitCount = 0;
+  nextLines.forEach((line) => {
+    const matches = [...line.matchAll(/\^/g)];
+    if (matches.length === 0) {
+      return;
+    }
+
+    for (const match of matches) {
+      const splitterIndex = match.index;
+      if (beamPositions.includes(splitterIndex)) {
+        beamPositions = beamPositions.filter((pos) => pos !== splitterIndex);
+        if (splitterIndex > 0) {
+          beamPositions.push(splitterIndex + 1);
+        }
+        if (splitterIndex < line.length - 1) {
+          beamPositions.push(splitterIndex - 1);
+        }
+        splitCount++;
+      }
+    }
+    beamPositions = [...new Set(beamPositions.sort((a, b) => a - b))];
+  });
+  return splitCount;
+}
 
 function part2(input: string[]) {}
 
