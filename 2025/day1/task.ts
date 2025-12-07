@@ -15,56 +15,46 @@ const MIN = 0;
 const MAX = 99;
 const TOTAL = MAX + 1;
 
-function part1(instructions: { direction: Direction; steps: number }[]) {
+function solve(instructions: { direction: Direction; steps: number }[]) {
   let currentNumber = START;
+
+  // Part 2: Count all occurences where the clicker go through a 0
+  let landsAt0 = 0;
+
+  // Part 1: Count all occurences where the clicker stops at a 0
   let stopsAt0 = 0;
 
   instructions.forEach(({ direction, steps }) => {
     for (let count = 0; count < steps; count++) {
       const move = direction === 'L' ? -1 : 1;
       currentNumber = (currentNumber + move) % TOTAL;
+
+      if (currentNumber === MIN) {
+        landsAt0++;
+      }
     }
 
     if (currentNumber === MIN) {
       stopsAt0++;
     }
   });
-  return stopsAt0;
-}
-
-function part2(instructions: { direction: Direction; steps: number }[]) {
-  let currentNumber = START;
-  let stopsAt0 = 0;
-
-  instructions.forEach(({ direction, steps }) => {
-    for (let count = 0; count < steps; count++) {
-      const move = direction === 'L' ? -1 : 1;
-      currentNumber = (currentNumber + move) % TOTAL;
-      if (currentNumber === MIN) {
-        stopsAt0++;
-      }
-    }
-  });
-  return stopsAt0;
+  return { stopsAt0, landsAt0 };
 }
 
 function go(): void {
   console.time('task');
 
-  console.time('parse-input');
+  console.time('solve');
   const input = parseInput('./input.txt');
   const instructions = input.map(parseInstruction);
-  console.timeEnd('parse-input');
+  const { stopsAt0, landsAt0 } = solve(instructions);
+  console.timeEnd('solve');
 
-  console.time('part 1');
-  const res1 = part1(instructions);
+  const res1 = stopsAt0;
   console.log('PART 1: ', res1);
-  console.timeEnd('part 1');
 
-  console.time('part 2');
-  const res2 = part2(instructions);
+  const res2 = landsAt0;
   console.log('PART 2: ', res2);
-  console.timeEnd('part 2');
 
   console.timeEnd('task');
 }
