@@ -36,11 +36,12 @@ function buildPointsList(input: string[]) {
     .filter((num): num is Coordinates => num !== undefined);
 }
 
-function part1(input: string[], maxConnects: number) {
+function solve(input: string[], maxConnects?: number) {
   const points = buildPointsList(input);
   let connectsLeft = maxConnects;
   let circuits: Set<Coordinates>[] = [];
   let paths: Path[] = [];
+
   points.forEach((start, index) => {
     const endPoints = points.slice(index + 1);
     endPoints.forEach((end) => {
@@ -70,7 +71,7 @@ function part1(input: string[], maxConnects: number) {
     if (existingCircuits.length === 0) {
       const newCircuit = new Set([start, end]);
       circuits.push(newCircuit);
-      connectsLeft--;
+      connectsLeft && connectsLeft--;
       existingCircuits = [];
       existingIndex = [];
       return;
@@ -80,7 +81,7 @@ function part1(input: string[], maxConnects: number) {
       const existingCircuit = existingCircuits[0];
       existingCircuit.add(start);
       existingCircuit.add(end);
-      connectsLeft--;
+      connectsLeft && connectsLeft--;
       existingCircuits = [];
       existingIndex = [];
       return;
@@ -90,16 +91,17 @@ function part1(input: string[], maxConnects: number) {
     circuits.push(mergedCircuit);
     circuits.splice(existingIndex[0], 1);
     circuits.splice(existingIndex[1] - 1, 1);
-    connectsLeft--;
+    connectsLeft && connectsLeft--;
     existingCircuits = [];
     existingIndex = [];
-  })
+  });
 
+  // Part 1: Sort the top 3 and multiply their length
   circuits = circuits.sort((a, b) => b.size - a.size);
-  return circuits[0].size * circuits[1].size * circuits[2].size;
-}
+  const res1 = circuits.length > 1 ? circuits[0].size * circuits[1].size * circuits[2].size : 0;
 
-function part2(input: string[]) {}
+  return { res1 };
+}
 
 function go(): void {
   console.time('task');
@@ -109,7 +111,8 @@ function go(): void {
   console.timeEnd('parse-input');
 
   console.time('part 1');
-  const res1 = part1(input, 1000);
+  // const { res1 } = solve(input, 10);
+  const { res1 } = solve(input, 1000);
   console.log('PART 1: ', res1);
   console.timeEnd('part 1');
 
