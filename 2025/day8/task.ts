@@ -12,6 +12,8 @@ type Path = {
   distance: number;
 };
 
+class Circuit extends Set<Coordinates> {}
+
 /**
  * calculate the Eucledian distance between 2 points in 3 dimensional space.
  * @see https://en.wikipedia.org/wiki/Euclidean_distance
@@ -21,28 +23,17 @@ function calculateDistance(point1: Coordinates, point2: Coordinates): number {
 }
 
 function buildPointsList(input: string[]) {
-  return input
-    .map((line) => {
-      if (line.trim().length === 0) {
-        return undefined;
-      }
+  return input.map((line) => {
+    const matchers = line.match(/(\d+)/g);
+    if (!matchers) throw new Error(`Invalid input: ${line}`);
 
-      const matchers = line.match(/(\d+)/g);
-      if (!matchers) throw new Error(`Invalid input: ${line}`);
-
-      const [x, y, z] = matchers;
-      return { x: Number.parseInt(x, 10), y: Number.parseInt(y, 10), z: Number.parseInt(z, 10) } satisfies Coordinates;
-    })
-    .filter((num): num is Coordinates => num !== undefined);
+    const [x, y, z] = matchers;
+    return { x: Number.parseInt(x, 10), y: Number.parseInt(y, 10), z: Number.parseInt(z, 10) } satisfies Coordinates;
+  });
 }
 
-function solve(input: string[], maxConnects?: number) {
-  const points = buildPointsList(input);
-  let connectsLeft = maxConnects;
-  let circuits: Set<Coordinates>[] = [];
-  let paths: Path[] = [];
-  let lastPath: Path | undefined;
-
+function buildPathsList(points: Coordinates[]) {
+  const paths: Path[] = [];
   points.forEach((start, index) => {
     const endPoints = points.slice(index + 1);
     endPoints.forEach((end) => {
@@ -50,62 +41,74 @@ function solve(input: string[], maxConnects?: number) {
       paths.push({ start, end, distance });
     });
   });
-  paths = paths.sort((a, b) => a.distance - b.distance);
+  return paths.sort((a, b) => a.distance - b.distance);
+}
 
-  paths.forEach((path, index) => {
+function findCircuitsContainingPoint(circuits: Circuit[], point1: Coordinates, point2: Coordinates): { index: number; circuit: Circuit }[] {
+  return circuits.reduce(
+    (acc, circuit, index) => {
+      if (circuit.has(point1) || circuit.has(point2)) {
+        acc.push({ index, circuit });
+      }
+      return acc;
+    },
+    [] as { index: number; circuit: Circuit }[]
+  );
+}
+
+function solve(input: string[], maxConnects?: number) {
+  const points = buildPointsList(input);
+  let connectsLeft = maxConnects;
+  let circuits: Circuit[] = [];
+  let lastPath: Path | undefined;
+
+  const paths = buildPathsList(points);
+
+  for (let index = 0; index < paths.length; index++) {
+    const path = paths[index];
+
     if (connectsLeft === 0) {
-      return;
+      break;
     }
 
-    if (circuits.length === 1 && circuits[0].size === points.length) {
-      if (!lastPath) {
-        lastPath = paths[index - 1];
-      }
-      return;
+    if (circuits.length === 1 && circuits[0].size === points.length && !lastPath) {
+      lastPath = paths[index - 1];
+      break;
     }
 
     const { start, end } = path;
 
-    let existingCircuits: Set<Coordinates>[] = [];
-    let existingIndex: number[] = [];
-    for (let circuitIndex = 0; circuitIndex < circuits.length; circuitIndex++) {
-      const currentCircuit = circuits[circuitIndex];
-      if (currentCircuit.has(start) || currentCircuit.has(end)) {
-        existingCircuits.push(currentCircuit);
-        existingIndex.push(circuitIndex);
-      }
-    }
+    const existingCircuits = findCircuitsContainingPoint(circuits, start, end);
 
+    // No existing circuit, create new
     if (existingCircuits.length === 0) {
       const newCircuit = new Set([start, end]);
       circuits.push(newCircuit);
       connectsLeft && connectsLeft--;
-      existingCircuits = [];
-      existingIndex = [];
-      return;
+      continue;
     }
 
+    // If found only 1 circuit that contain either or both points, add the points to it
     if (existingCircuits.length === 1) {
-      const existingCircuit = existingCircuits[0];
+      const existingCircuit = existingCircuits[0].circuit;
       existingCircuit.add(start);
       existingCircuit.add(end);
       connectsLeft && connectsLeft--;
-      existingCircuits = [];
-      existingIndex = [];
-      return;
+      continue;
     }
 
-    const mergedCircuit = new Set([...existingCircuits[0], ...existingCircuits[1], start, end]);
-    circuits.splice(existingIndex[0], 1, mergedCircuit);
-    circuits.splice(existingIndex[1], 1);
+    // Found more than 1, merge them together and splice out 1.
+    // Since it's all gonna be merged together and we only look for 2 data points
+    // there's no way it can be more than 2 here.
+    const mergedCircuit = new Set([...existingCircuits[0].circuit, ...existingCircuits[1].circuit, start, end]);
+    circuits.splice(existingCircuits[0].index, 1, mergedCircuit);
+    circuits.splice(existingCircuits[1].index, 1);
     connectsLeft && connectsLeft--;
-    existingCircuits = [];
-    existingIndex = [];
-  });
+  }
 
   // Part 1: Sort the top 3 and multiply their length
   circuits = circuits.sort((a, b) => b.size - a.size);
-  const res1 = circuits.length > 1 ? circuits[0].size * circuits[1].size * circuits[2].size : 0;
+  const res1 = circuits.length >= 3 ? circuits[0].size * circuits[1].size * circuits[2].size : 0;
 
   // Part 2: Find the last connection to make the circuit reach full length
   const res2 = lastPath ? lastPath.start.x * lastPath.end.x : 0;
