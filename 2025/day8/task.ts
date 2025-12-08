@@ -41,6 +41,7 @@ function solve(input: string[], maxConnects?: number) {
   let connectsLeft = maxConnects;
   let circuits: Set<Coordinates>[] = [];
   let paths: Path[] = [];
+  let lastPath: Path | undefined;
 
   points.forEach((start, index) => {
     const endPoints = points.slice(index + 1);
@@ -51,8 +52,15 @@ function solve(input: string[], maxConnects?: number) {
   });
   paths = paths.sort((a, b) => a.distance - b.distance);
 
-  paths.forEach((path) => {
+  paths.forEach((path, index) => {
     if (connectsLeft === 0) {
+      return;
+    }
+
+    if (circuits.length === 1 && circuits[0].size === points.length) {
+      if (!lastPath) {
+        lastPath = paths[index - 1];
+      }
       return;
     }
 
@@ -88,9 +96,8 @@ function solve(input: string[], maxConnects?: number) {
     }
 
     const mergedCircuit = new Set([...existingCircuits[0], ...existingCircuits[1], start, end]);
-    circuits.push(mergedCircuit);
-    circuits.splice(existingIndex[0], 1);
-    circuits.splice(existingIndex[1] - 1, 1);
+    circuits.splice(existingIndex[0], 1, mergedCircuit);
+    circuits.splice(existingIndex[1], 1);
     connectsLeft && connectsLeft--;
     existingCircuits = [];
     existingIndex = [];
@@ -100,13 +107,17 @@ function solve(input: string[], maxConnects?: number) {
   circuits = circuits.sort((a, b) => b.size - a.size);
   const res1 = circuits.length > 1 ? circuits[0].size * circuits[1].size * circuits[2].size : 0;
 
-  return { res1 };
+  // Part 2: Find the last connection to make the circuit reach full length
+  const res2 = lastPath ? lastPath.start.x * lastPath.end.x : 0;
+
+  return { res1, res2 };
 }
 
 function go(): void {
   console.time('task');
 
   console.time('parse-input');
+  // const input = parseInput('./sample.txt');
   const input = parseInput('./input.txt');
   console.timeEnd('parse-input');
 
@@ -117,7 +128,7 @@ function go(): void {
   console.timeEnd('part 1');
 
   console.time('part 2');
-  const res2 = part2(input);
+  const { res2 } = solve(input);
   console.log('PART 2: ', res2);
   console.timeEnd('part 2');
 
