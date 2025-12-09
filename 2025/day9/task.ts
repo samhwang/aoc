@@ -1,6 +1,35 @@
 import { parseInput } from '../src/parse-input';
 
-function part1(input: string[]) {}
+type Coordinates = {
+  x: number;
+  y: number;
+};
+
+function calculateRectangleSize(point1: Coordinates, point2: Coordinates): number {
+  const width = Math.abs(point1.x - point2.x) + 1;
+  const height = Math.abs(point1.y - point2.y) + 1;
+  return width * height;
+}
+
+function buildRedTilesMap(input: string[]) {
+  return input.map((line): Coordinates => {
+    const [x, y] = line.split(',').map((num) => Number.parseInt(num, 10));
+    return { x, y };
+  });
+}
+
+function part1(input: string[]) {
+  let largestArea = 0;
+  const redTiles = buildRedTilesMap(input);
+  for (let i = 0; i < redTiles.length; i++) {
+    for (let j = i + 1; j < redTiles.length; j++) {
+      const area = calculateRectangleSize(redTiles[i], redTiles[j]);
+      largestArea = Math.max(largestArea, area);
+    }
+  }
+
+  return largestArea;
+}
 
 function part2(input: string[]) {}
 
