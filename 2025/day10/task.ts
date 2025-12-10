@@ -2,14 +2,16 @@ import { type Arith, type Context, init } from 'z3-solver';
 
 import { parseInput } from '../src/parse-input';
 
-type State = boolean[];
+type ToggleState = boolean[];
 type Button = number[];
 type Joltage = number[];
-type Config = {
-  endState: State;
+type Target<TTarget extends ToggleState | Joltage> = {
+  endState: TTarget;
   buttons: Button[];
-  joltage: Joltage;
-  joltageButtons: Button[];
+};
+type Config = {
+  toggle: Target<ToggleState>;
+  jolt: Target<Joltage>;
 };
 
 function buildInput(input: string[]) {
@@ -48,19 +50,28 @@ function buildInput(input: string[]) {
       joltageButtons.push(sb);
     }
 
-    return { endState, buttons, joltage, joltageButtons };
+    return {
+      toggle: {
+        endState,
+        buttons,
+      },
+      jolt: {
+        endState: joltage,
+        buttons: joltageButtons,
+      },
+    };
   });
 }
 
-const binaryMapCache = new Map<number, State[]>();
+const binaryMapCache = new Map<number, ToggleState[]>();
 
-function buildBinaryMap(length: number): boolean[][] {
+function buildBinaryStatesCache(length: number): boolean[][] {
   const currentCache = binaryMapCache.get(length);
   if (currentCache) {
     return currentCache;
   }
 
-  const res: State[] = [];
+  const res: ToggleState[] = [];
   for (let i = 0; i < 2 ** length; i++) {
     const numAsState = i
       .toString(2)
@@ -73,7 +84,7 @@ function buildBinaryMap(length: number): boolean[][] {
   return res;
 }
 
-function pressButtonBinary(currentState: State, button: Button) {
+function pressButtonToggle(currentState: ToggleState, button: Button) {
   const newState = [...currentState];
   for (const b of button) {
     newState[b] = !newState[b];
@@ -81,7 +92,7 @@ function pressButtonBinary(currentState: State, button: Button) {
   return newState;
 }
 
-function compareBinaryState(state1: State, state2: State) {
+function compareToggleState(state1: ToggleState, state2: ToggleState) {
   if (state1.length !== state2.length) {
     return false;
   }
@@ -94,18 +105,18 @@ function compareBinaryState(state1: State, state2: State) {
   return true;
 }
 
-function calculateMinNumberOfButtonPressesBinary({ endState, buttons }: Pick<Config, 'buttons' | 'endState'>): number {
-  const steps: State[] = [];
-  const binaryStates = buildBinaryMap(buttons.length);
+function calculateMinNumberOfToggles({ endState, buttons }: Config['toggle']): number {
+  const steps: ToggleState[] = [];
+  const binaryStates = buildBinaryStatesCache(buttons.length);
 
   for (const bin of binaryStates) {
-    let state: State = Array.from({ length: endState.length }, () => false);
+    let state: ToggleState = Array.from({ length: endState.length }, () => false);
     for (let binIndex = 0; binIndex < bin.length; binIndex++) {
       if (bin[binIndex]) {
-        state = pressButtonBinary(state, buttons[binIndex]);
+        state = pressButtonToggle(state, buttons[binIndex]);
       }
     }
-    if (compareBinaryState(state, endState)) {
+    if (compareToggleState(state, endState)) {
       steps.push(bin.filter((btn) => !!btn));
     }
   }
@@ -114,44 +125,42 @@ function calculateMinNumberOfButtonPressesBinary({ endState, buttons }: Pick<Con
 }
 
 /**
- * Assumming all switches are binary, i.e. only 1 signal is required to turn a light on
+ * Each button is a toggle switch, works with first part of the input.
+ * One push of a button sends a toggle signal to the light, and the light will then be flip on or off.
  * e.g. For an input like: [.##.] means light 1 and 2 needs to be hit once.
  */
 function part1(input: string[]) {
   let totalPresses = 0;
   const list = buildInput(input);
-  list.forEach(({ endState, buttons }) => {
-    const buttonPresses = calculateMinNumberOfButtonPressesBinary({ endState, buttons });
+  list.forEach(({ toggle }) => {
+    const buttonPresses = calculateMinNumberOfToggles(toggle);
     totalPresses += buttonPresses;
   });
 
   return totalPresses;
 }
 
-async function calculateMinNumberOfButtonPressesWithJoltage(
-  { joltageButtons, joltage }: Pick<Config, 'joltageButtons' | 'joltage'>,
-  context: Context
-): Promise<number> {
+async function calculateMinNumberOfButtonPressesWithJoltage({ endState, buttons }: Config['jolt'], context: Context): Promise<number> {
   const { Optimize, Int } = context;
   const alphabet = 'abcdefghijklmnopqrstuvwxyz';
   const solver = new Optimize();
 
   const vars: Arith[] = [];
 
-  for (let i = 0; i < joltageButtons.length; i++) {
+  for (let i = 0; i < buttons.length; i++) {
     const value = Int.const(`${alphabet[i]}`);
     solver.add(value.ge(0));
     vars.push(value);
   }
 
-  for (let x = 0; x < joltage.length; x++) {
+  for (let x = 0; x < endState.length; x++) {
     let check = Int.val(0);
-    for (const [y, btn] of joltageButtons.entries()) {
+    for (const [y, btn] of buttons.entries()) {
       if (btn[x] === 1) {
         check = check.add(vars[y]);
       }
     }
-    check = check.eq(Int.val(joltage[x]));
+    check = check.eq(Int.val(endState[x]));
     solver.add(check);
   }
 
@@ -167,7 +176,9 @@ async function calculateMinNumberOfButtonPressesWithJoltage(
 }
 
 /**
- * Now the joltage comes to play. For a light to stay on, it needs to match the joltage.
+ * Each button is now a counter switch, works with the last part of the input.
+ * One push of the button sends 1 counter signal to the light. A specific light needs
+ * to match their respective amount of counter signal to stay on.
  * e.g. for an input like {3,5,4,7}:
  * - light 0 needs 3
  * - light 1 needs 5
@@ -178,8 +189,8 @@ async function part2(input: string[]) {
   const { Context } = await init();
   let totalPresses = 0;
   const list = buildInput(input);
-  list.forEach(async ({ joltageButtons, joltage }) => {
-    const buttonPresses = await calculateMinNumberOfButtonPressesWithJoltage({ joltageButtons, joltage }, Context('main'));
+  list.forEach(async ({ jolt }) => {
+    const buttonPresses = await calculateMinNumberOfButtonPressesWithJoltage(jolt, Context('main'));
     totalPresses += buttonPresses;
   });
 
@@ -190,7 +201,8 @@ async function go(): Promise<void> {
   console.time('task');
 
   console.time('parse-input');
-  const input = parseInput('./sample.txt');
+  // const input = parseInput('./sample.txt');
+  const input = parseInput('./input.txt');
   console.timeEnd('parse-input');
 
   console.time('part 1');
