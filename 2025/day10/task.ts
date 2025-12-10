@@ -57,7 +57,7 @@ function buildBinaryMap(length: number): boolean[][] {
   return res;
 }
 
-function pressButton(currentState: State, button: Button) {
+function pressButtonBinary(currentState: State, button: Button) {
   const newState = [...currentState];
   for (const b of button) {
     newState[b] = !newState[b];
@@ -65,7 +65,7 @@ function pressButton(currentState: State, button: Button) {
   return newState;
 }
 
-function compareState(state1: State, state2: State) {
+function compareBinaryState(state1: State, state2: State) {
   if (state1.length !== state2.length) {
     return false;
   }
@@ -78,7 +78,7 @@ function compareState(state1: State, state2: State) {
   return true;
 }
 
-function calculateMinNumberOfButtonPresses({ endState, buttons }: Config): number {
+function calculateMinNumberOfButtonPressesBinary({ endState, buttons }: Config): number {
   const steps: State[] = [];
   const binaryStates = buildBinaryMap(buttons.length);
 
@@ -86,35 +86,41 @@ function calculateMinNumberOfButtonPresses({ endState, buttons }: Config): numbe
     let state: State = Array.from({ length: endState.length }, () => false);
     for (let binIndex = 0; binIndex < bin.length; binIndex++) {
       if (bin[binIndex]) {
-        state = pressButton(state, buttons[binIndex]);
+        state = pressButtonBinary(state, buttons[binIndex]);
       }
     }
-    if (compareState(state, endState)) {
-      steps.push(bin);
+    if (compareBinaryState(state, endState)) {
+      steps.push(bin.filter(btn => !!btn));
     }
   }
 
   return steps.sort((a, b) => a.length - b.length)[0].length;
 }
 
+/**
+ * Assumming all switches are binary, i.e. only 1 signal is required to turn a light on
+ */
 function part1(input: string[]) {
   let totalPresses = 0;
   const list = buildInput(input);
   list.forEach(({ endState, buttons, joltage }) => {
-    const buttonPresses = calculateMinNumberOfButtonPresses({ endState, buttons, joltage });
+    const buttonPresses = calculateMinNumberOfButtonPressesBinary({ endState, buttons, joltage });
     totalPresses += buttonPresses;
   });
 
   return totalPresses;
 }
 
+/**
+ * Now the joltage comes to play. An indicate needs a specific amount of signal coming to turn the light on
+ */
 function part2(input: string[]) {}
 
 function go(): void {
   console.time('task');
 
   console.time('parse-input');
-  const input = parseInput('./sample.txt');
+  const input = parseInput('./input.txt');
   console.timeEnd('parse-input');
 
   console.time('part 1');
