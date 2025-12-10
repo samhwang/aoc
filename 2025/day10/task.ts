@@ -1,12 +1,15 @@
+import { type Arith, type Context, init } from 'z3-solver';
+
 import { parseInput } from '../src/parse-input';
 
 type State = boolean[];
 type Button = number[];
-type Joltage = string; // Not parsed yet so leaving as string
+type Joltage = number[];
 type Config = {
   endState: State;
   buttons: Button[];
   joltage: Joltage;
+  joltageButtons: Button[];
 };
 
 function buildInput(input: string[]) {
@@ -14,11 +17,18 @@ function buildInput(input: string[]) {
     const groups = line.split(' ');
 
     const indicatorGroup = groups[0];
-    const indicator = indicatorGroup
+    const endState = indicatorGroup
       .replaceAll(/\[?\]?/g, '')
       .split('')
       .map((d) => d === '#');
 
+    const joltageGroup = groups[groups.length - 1];
+    const joltageMatcher = joltageGroup.match(/\d+/g);
+    if (!joltageMatcher) {
+      throw new Error(`Invalid joltage input ${joltageGroup}!`);
+    }
+
+    const joltage = joltageMatcher.map((num) => Number.parseInt(num, 10));
     const buttonGroups = groups.slice(1, groups.length - 1);
     const buttons = buttonGroups.map((group) => {
       const buttonMatchers = group.match(/\d/g);
@@ -29,10 +39,16 @@ function buildInput(input: string[]) {
       return buttonMatchers.map((num) => Number.parseInt(num, 10)).sort((a, b) => a - b) as Button;
     });
 
-    const joltageGroup = groups[groups.length - 1];
-    const joltage = joltageGroup;
+    const joltageButtons: Button[] = [];
+    for (const b of buttons) {
+      const sb: Button = [];
+      for (let i = 0; i < joltage.length; i++) {
+        sb.push(b.includes(i) ? 1 : 0);
+      }
+      joltageButtons.push(sb);
+    }
 
-    return { endState: indicator, buttons, joltage };
+    return { endState, buttons, joltage, joltageButtons };
   });
 }
 
@@ -78,7 +94,7 @@ function compareBinaryState(state1: State, state2: State) {
   return true;
 }
 
-function calculateMinNumberOfButtonPressesBinary({ endState, buttons }: Config): number {
+function calculateMinNumberOfButtonPressesBinary({ endState, buttons }: Pick<Config, 'buttons' | 'endState'>): number {
   const steps: State[] = [];
   const binaryStates = buildBinaryMap(buttons.length);
 
@@ -90,7 +106,7 @@ function calculateMinNumberOfButtonPressesBinary({ endState, buttons }: Config):
       }
     }
     if (compareBinaryState(state, endState)) {
-      steps.push(bin.filter(btn => !!btn));
+      steps.push(bin.filter((btn) => !!btn));
     }
   }
 
@@ -99,28 +115,82 @@ function calculateMinNumberOfButtonPressesBinary({ endState, buttons }: Config):
 
 /**
  * Assumming all switches are binary, i.e. only 1 signal is required to turn a light on
+ * e.g. For an input like: [.##.] means light 1 and 2 needs to be hit once.
  */
 function part1(input: string[]) {
   let totalPresses = 0;
   const list = buildInput(input);
-  list.forEach(({ endState, buttons, joltage }) => {
-    const buttonPresses = calculateMinNumberOfButtonPressesBinary({ endState, buttons, joltage });
+  list.forEach(({ endState, buttons }) => {
+    const buttonPresses = calculateMinNumberOfButtonPressesBinary({ endState, buttons });
     totalPresses += buttonPresses;
   });
 
   return totalPresses;
 }
 
-/**
- * Now the joltage comes to play. An indicate needs a specific amount of signal coming to turn the light on
- */
-function part2(input: string[]) {}
+async function calculateMinNumberOfButtonPressesWithJoltage(
+  { joltageButtons, joltage }: Pick<Config, 'joltageButtons' | 'joltage'>,
+  context: Context
+): Promise<number> {
+  const { Optimize, Int } = context;
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+  const solver = new Optimize();
 
-function go(): void {
+  const vars: Arith[] = [];
+
+  for (let i = 0; i < joltageButtons.length; i++) {
+    const value = Int.const(`${alphabet[i]}`);
+    solver.add(value.ge(0));
+    vars.push(value);
+  }
+
+  for (let x = 0; x < joltage.length; x++) {
+    let check = Int.val(0);
+    for (const [y, btn] of joltageButtons.entries()) {
+      if (btn[x] === 1) {
+        check = check.add(vars[y]);
+      }
+    }
+    check = check.eq(Int.val(joltage[x]));
+    solver.add(check);
+  }
+
+  const sumVars = vars.reduce((accumulator, value) => accumulator.add(value), Int.val(0));
+  solver.minimize(sumVars);
+
+  const result = await solver.check();
+  if (result === 'sat') {
+    return Number.parseInt(solver.model().eval(sumVars).toString(), 10);
+  } else {
+    return 0;
+  }
+}
+
+/**
+ * Now the joltage comes to play. For a light to stay on, it needs to match the joltage.
+ * e.g. for an input like {3,5,4,7}:
+ * - light 0 needs 3
+ * - light 1 needs 5
+ * - light 2 needs 4
+ * - light 3 needs 7
+ */
+async function part2(input: string[]) {
+  const { Context } = await init();
+  let totalPresses = 0;
+  const list = buildInput(input);
+  list.forEach(async ({ joltageButtons, joltage }) => {
+    const buttonPresses = await calculateMinNumberOfButtonPressesWithJoltage({ joltageButtons, joltage }, Context('main'));
+    totalPresses += buttonPresses;
+  });
+
+  return totalPresses;
+}
+
+async function go(): Promise<void> {
   console.time('task');
 
   console.time('parse-input');
-  const input = parseInput('./input.txt');
+  const input = parseInput('./sample.txt');
   console.timeEnd('parse-input');
 
   console.time('part 1');
@@ -129,7 +199,7 @@ function go(): void {
   console.timeEnd('part 1');
 
   console.time('part 2');
-  const res2 = part2(input);
+  const res2 = await part2(input);
   console.log('PART 2: ', res2);
   console.timeEnd('part 2');
 

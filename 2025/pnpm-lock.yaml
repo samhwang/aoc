@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      z3-solver:
+        specifier: ^4.15.4
+        version: 4.15.4
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.3.8
@@ -244,6 +248,9 @@ packages:
   '@types/node@24.10.2':
     resolution: {integrity: sha512-WOhQTZ4G8xZ1tjJTvKOpyEVSGgOTvJAfDK3FNFgELyaTpzhdgHVHeqW8V+UJvzF5BT+/B54T/1S2K6gd9c7bbA==}
 
+  async-mutex@0.3.2:
+    resolution: {integrity: sha512-HuTK7E7MT7jZEh1P9GtRW9+aTWiDWWi9InbZ5hjxrnRa39KS4BW04+xLBhYNS2aXhHUIKZSw3gj4Pn1pj+qGAA==}
+
   commander@14.0.2:
     resolution: {integrity: sha512-TywoWNNRbhoD0BXs1P3ZEScW8W5iKrnbithIl0YH+uCmBd0QpPOA8yc82DS3BIE5Ma6FnBVUsJ7wVUDz4dvOWQ==}
     engines: {node: '>=20'}
@@ -264,6 +271,9 @@ packages:
   resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
 
+  tslib@2.8.1:
+    resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
   tsx@4.21.0:
     resolution: {integrity: sha512-5C1sg4USs1lfG0GFb2RLXsdpXqBSEhAaA/0kPL01wxzpMqLILNxIxIOKiILz+cdg/pLnOUxFYOR5yhHU666wbw==}
     engines: {node: '>=18.0.0'}
@@ -280,6 +290,10 @@ packages:
   wretch@3.0.5:
     resolution: {integrity: sha512-hXbnbeWaBVbSfuq0ppDhygZ0iCQqVKzuBxa7GsLKDGtgZIzzc2z+7Qn8N8Kwdykz+ryi0iSOoo3Kyx8KRMd3TA==}
     engines: {node: '>=22'}
+
+  z3-solver@4.15.4:
+    resolution: {integrity: sha512-Tcv55+k5VsPQEX7R3gIu5ieUeLp9fP1r+8+c85dQORj/v4Fy+LvOzVzZZtg4mJjUgfIhGCg6ZfAeiUiUxDPRVg==}
+    engines: {node: '>=16'}
 
 snapshots:
 
@@ -400,6 +414,10 @@ snapshots:
     dependencies:
       undici-types: 7.16.0
 
+  async-mutex@0.3.2:
+    dependencies:
+      tslib: 2.8.1
+
   commander@14.0.2: {}
 
   esbuild@0.27.0:
@@ -440,6 +458,8 @@ snapshots:
 
   resolve-pkg-maps@1.0.0: {}
 
+  tslib@2.8.1: {}
+
   tsx@4.21.0:
     dependencies:
       esbuild: 0.27.0
@@ -452,3 +472,7 @@ snapshots:
   undici-types@7.16.0: {}
 
   wretch@3.0.5: {}
+
+  z3-solver@4.15.4:
+    dependencies:
+      async-mutex: 0.3.2
