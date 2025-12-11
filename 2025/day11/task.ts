@@ -1,6 +1,54 @@
 import { parseInput } from '../src/parse-input';
 
-function part1(input: string[]) {}
+const START_SIGNAL = 'you';
+const END_SIGNAL = 'out';
+
+function buildMap(input: string[]) {
+  const rackMap = new Map<string, string[]>();
+  input.forEach((line) => {
+    const matchers = line.match(/(\w+)/g);
+    if (!matchers) {
+      throw new Error('Invalid input');
+    }
+
+    const [start, ...end] = matchers;
+    rackMap.set(start, end);
+  });
+  return rackMap;
+}
+
+function findAllPaths(map: Map<string, string[]>, current: string, end: string, visited: Set<string>): number {
+  if (current === end) {
+    return 1;
+  }
+
+  if (visited.has(current)) {
+    return 0;
+  }
+
+  visited.add(current);
+
+  let pathCount = 0;
+  const endpoints = map.get(current) ?? [];
+  for (const endpoint of endpoints) {
+    pathCount += findAllPaths(map, endpoint, end, visited);
+  }
+
+  visited.delete(current);
+  return pathCount;
+}
+
+function part1(input: string[]) {
+  const map = buildMap(input);
+  const endingPoints: string[] = [];
+  map.forEach((ends, start) => {
+    if (ends.includes(END_SIGNAL)) {
+      endingPoints.push(start);
+    }
+  });
+
+  return findAllPaths(map, START_SIGNAL, END_SIGNAL, new Set());
+}
 
 function part2(input: string[]) {}
 
