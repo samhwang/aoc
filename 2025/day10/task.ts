@@ -154,14 +154,14 @@ async function calculateMinNumberOfButtonPressesWithJoltage({ endState, buttons 
   }
 
   for (let x = 0; x < endState.length; x++) {
-    let check = Int.val(0);
+    let sum: Arith = Int.val(0);
     for (const [y, btn] of buttons.entries()) {
       if (btn[x] === 1) {
-        check = check.add(vars[y]);
+        sum = sum.add(vars[y]);
       }
     }
-    check = check.eq(Int.val(endState[x]));
-    solver.add(check);
+    const constraint = sum.eq(Int.val(endState[x]));
+    solver.add(constraint);
   }
 
   const sumVars = vars.reduce((accumulator, value) => accumulator.add(value), Int.val(0));
@@ -187,12 +187,12 @@ async function calculateMinNumberOfButtonPressesWithJoltage({ endState, buttons 
  */
 async function part2(input: string[]) {
   const { Context } = await init();
-  let totalPresses = 0;
   const list = buildInput(input);
-  list.forEach(async ({ jolt }) => {
+  const totalPresses = await list.reduce(async (acc, { jolt }) => {
+    const prev = await acc;
     const buttonPresses = await calculateMinNumberOfButtonPressesWithJoltage(jolt, Context('main'));
-    totalPresses += buttonPresses;
-  });
+    return prev + buttonPresses;
+  }, Promise.resolve(0));
 
   return totalPresses;
 }
