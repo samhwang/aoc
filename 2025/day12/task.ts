@@ -1,14 +1,78 @@
-import { parseInput } from '../src/parse-input';
+import fs from 'node:fs';
 
-function part1(input: string[]) {}
+type Present = {
+  id: number;
+  shape: string[][];
+};
 
-function part2(input: string[]) {}
+type Region = {
+  sizeX: number;
+  sizeY: number;
+  quantities: number[];
+};
+
+type Config = {
+  presents: Present[];
+  regions: Region[];
+};
+
+function parseInput(inputPath: string): Config {
+  const rawInput = fs.readFileSync(inputPath, { encoding: 'utf8' }).trim().split('\n\n');
+  const presentGroups = rawInput.slice(0, rawInput.length - 1);
+  const presents = presentGroups.reduce((accumulator, group) => {
+    const [firstLine, ...lastLines] = group.split('\n');
+    const indexMatcher = firstLine.match(/\d+/g);
+    if (!indexMatcher) {
+      throw new Error('Invalid input');
+    }
+    const index = Number.parseInt(indexMatcher[0], 10);
+
+    const shapeGrid = lastLines.map((line) => line.split(''));
+
+    accumulator.push({ id: index, shape: shapeGrid });
+    return accumulator;
+  }, [] as Present[]);
+  const lastGroup = rawInput[rawInput.length - 1];
+  const regions = lastGroup.split('\n').map((line) => {
+    const sizeMatcher = line.match(/(\d+x\d+)/g);
+    if (!sizeMatcher) {
+      throw new Error('Invalid input');
+    }
+    const size = sizeMatcher[0].split('x').map((char) => Number.parseInt(char, 10));
+    const quantities = line
+      .slice(line.indexOf(':') + 1)
+      .trim()
+      .split(' ')
+      .map((char) => Number.parseInt(char, 10));
+    return { sizeX: size[0], sizeY: size[1], quantities };
+  });
+
+  return { presents, regions };
+}
+
+function canRegionFitAllPresents(presents: Present[], region: Region) {
+  const regionArea = region.sizeX * region.sizeY;
+  const totalPresentSize = presents.reduce((accumulator, present) => {
+    const presentArea = present.shape.flat().filter((cell) => cell === '#').length;
+    const totalPresentArea = presentArea * region.quantities[present.id];
+    return accumulator + totalPresentArea;
+  }, 0);
+  return regionArea >= totalPresentSize;
+}
+
+function part1(input: Config) {
+  return input.regions.filter((region) => canRegionFitAllPresents(input.presents, region)).length;
+}
+
+function part2(_input: string[]) {
+  return 'THERE IS NO PART 2! MERRY XMAS!';
+}
 
 function go(): void {
   console.time('task');
 
   console.time('parse-input');
-  const input = parseInput('./input.txt');
+  const input = parseInput('./sample.txt');
   console.timeEnd('parse-input');
 
   console.time('part 1');
